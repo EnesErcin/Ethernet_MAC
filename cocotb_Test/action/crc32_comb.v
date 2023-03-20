@@ -15,6 +15,15 @@ reg [crc_len-1:0]   nresult  ;
 reg [datalen-1:0] data_buf;
 reg [crc_len-1:0] crc_acc_n;
 
+
+`ifdef COCOTB_SIM
+initial begin
+    $dumpfile("sim.vcd");
+    $dumpvars(0,crc32_comb);
+end    
+`endif
+
+
 generate if (GMII) begin
         
             always @(*) begin
@@ -36,19 +45,19 @@ generate if (GMII) begin
             always @(posedge clk) begin
                 if (updatecrc) begin
                     $display("\n New data %h, \t %b",data,data);
-                    data_buf = reflect_byte(data);
-                    crc_acc_n =  (data_buf,((crc_len-data_len){1'b0}))^ crc_acc_n;
+                    data_buf = reflect_byte(data[datalen-1:0]);
+                    crc_acc_n =  {data_buf,{(crc_len-datalen){1'b0}}}^ crc_acc_n;
                     $display("1|| \t CRC %h, \t %b", crc_acc_n ,crc_acc_n );
                     
                     for (bit_n = 0; bit_n <=datalen ; bit_n =bit_n +1 ) begin // loop count = datalen-crc+1 d = 8, crc = 4 , loop = 7
-                        crc_acc_n = crc_bit_updt(crc_acc_n[crc_len+datalen:0],crc[crc_len-1:0],crc_acc_n[crc_len+datalen]);
+                        crc_acc_n = crc_bit_updt(crc_acc_n[crc_len-1:0],crc[crc_len-1:0],crc_acc_n[crc_len-1]);
                     $display("2_ %d|| \t CRC %h, \t %b", bit_n,crc_acc_n ,crc_acc_n );
                     end
                     byte_count <= byte_count + 1;
                     $display("3_ Result : || \t CRC_Reminder: 0x%h, \t %b", result,result);
                 end
-                    nresult      =   ~crc_acc[crc_len+datalen-1:datalen];
-                    result      =   crc_acc[crc_len+datalen-1:datalen];
+                    nresult      =   ~crc_acc[crc_len-1:0];
+                    result      =     crc_acc[crc_len-1:0];
             end
 
         initial $display("\t \t -------- \t GMII byte input");
@@ -71,8 +80,8 @@ endfunction
 
 function [datalen-1:0]reflect_byte (input [datalen-1:0]data);
     begin
-       for (bit_n =data_len ;bit_n<0 ;bit_n = bit_n-1 ) begin
-            reflect_byte[data_len-1-bit_n] = data[bit_n];
+       for (bit_n =datalen ;bit_n<0 ;bit_n = bit_n-1 ) begin
+            reflect_byte[datalen-1-bit_n] = data[bit_n];
        end
     end
 endfunction

@@ -1,0 +1,125 @@
+$date
+	Mon Mar 20 18:56:28 2023
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module crc32_comb $end
+$var wire 1 ! clk $end
+$var wire 8 " data [7:0] $end
+$var wire 1 # rst $end
+$var wire 1 $ strt $end
+$var wire 1 % updatecrc $end
+$var reg 5 & bit_n [4:0] $end
+$var reg 12 ' byte_count [11:0] $end
+$var reg 32 ( crc_acc [31:0] $end
+$var reg 32 ) crc_acc_n [31:0] $end
+$var reg 32 * crc_poly [31:0] $end
+$var reg 8 + data_buf [7:0] $end
+$var reg 32 , nresult [31:0] $end
+$var reg 32 - result [31:0] $end
+$scope function crc_bit_updt $end
+$var reg 1 . bit $end
+$var reg 32 / crc [31:0] $end
+$var reg 32 0 crc_acc [31:0] $end
+$upscope $end
+$scope function reflect_byte $end
+$var reg 8 1 data [7:0] $end
+$upscope $end
+$scope begin genblk1 $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+bz 1
+bx00000000 0
+b100110000010001110110110111 /
+x.
+b0 -
+b0 ,
+b0 +
+b100110000010001110110110111 *
+b11111111111111111111111111111111 )
+b11111111111111111111111111111111 (
+b0 '
+b1001 &
+1%
+z$
+1#
+bz "
+1!
+$end
+#1000
+0!
+#2000
+b0 '
+b0 -
+1.
+b11111111111111111111111100000000 0
+b11111111111111111111111111111111 )
+b0 +
+b1001 &
+1!
+#3000
+0!
+#4000
+b0 '
+b0 -
+b11111111111111111111111100000000 0
+1.
+b11111111111111111111111111111111 )
+b0 +
+b1001 &
+1!
+#5000
+0!
+#6000
+b0 '
+b0 -
+b11111111111111111111111100000000 0
+1.
+b11111111111111111111111111111111 )
+b0 +
+b1001 &
+1!
+#7000
+0!
+#8000
+b0 '
+b0 -
+b11111111111111111111111100000000 0
+1.
+b11111111111111111111111111111111 )
+b0 +
+b1001 &
+1!
+#9000
+0!
+#10000
+b11111111111111111111111111111111 -
+1!
+0%
+0#
+#11000
+0!
+#12000
+1!
+#13000
+0!
+#14000
+1!
+#15000
+0!
+#16000
+1!
+#17000
+0!
+#18000
+1!
+#19000
+0!
+#20001
