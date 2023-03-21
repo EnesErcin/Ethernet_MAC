@@ -8,7 +8,7 @@ input  [datalen-1:0] data
 );
 
 reg [crc_len-1:0]   crc_poly        = crc;
-reg [crc_len-1:0]   crc_acc         = {(crc_len+datalen+1){1'b1}};  //Initiate acc
+reg [crc_len-1:0]   crc_acc         = {(crc_len){1'b1}};  //Initiate acc
 reg [11:0]          byte_count =0;                                  //Keep track of bytes
 reg [4:0]           bit_n = 0;                                      //Keep track of bites
 reg [crc_len-1:0]   nresult  ;
@@ -29,12 +29,13 @@ generate if (GMII) begin
             always @(*) begin
 
                 if(rst) begin
-                    crc_acc     <= {(crc_len+datalen+1){1'b1}};
+                    crc_acc     <= {(crc_len){1'b1}};
                     result      <=  0;
                     byte_count  <=  0;
-                    crc_acc_n   <= {(crc_len+datalen+1){1'b1}};
+                    crc_acc_n   <= {(crc_len){1'b1}};
                     nresult     <=  0;
                     data_buf    <=  0;
+                    bit_n       <=  0;
                 end
 
                 else begin
@@ -45,14 +46,17 @@ generate if (GMII) begin
             always @(posedge clk) begin
                 if (updatecrc) begin
                     $display("\n New data %h, \t %b",data,data);
+
                     data_buf = reflect_byte(data[datalen-1:0]);
+
                     crc_acc_n =  {data_buf,{(crc_len-datalen){1'b0}}}^ crc_acc_n;
                     $display("1|| \t CRC %h, \t %b", crc_acc_n ,crc_acc_n );
                     
-                    for (bit_n = 0; bit_n <=datalen ; bit_n =bit_n +1 ) begin // loop count = datalen-crc+1 d = 8, crc = 4 , loop = 7
+                    for (bit_n = 0; bit_n <datalen ; bit_n =bit_n +1 ) begin // loop count = datalen-crc+1 d = 8, crc = 4 , loop = 7
                         crc_acc_n = crc_bit_updt(crc_acc_n[crc_len-1:0],crc[crc_len-1:0],crc_acc_n[crc_len-1]);
                     $display("2_ %d|| \t CRC %h, \t %b", bit_n,crc_acc_n ,crc_acc_n );
                     end
+                    bit_n       <=  0;
                     byte_count <= byte_count + 1;
                     $display("3_ Result : || \t CRC_Reminder: 0x%h, \t %b", result,result);
                 end
@@ -79,10 +83,13 @@ function [crc_len-1:0]crc_bit_updt (input [crc_len-1:0]crc_acc, input [crc_len-1
 endfunction
 
 function [datalen-1:0]reflect_byte (input [datalen-1:0]data);
+reg [datalen-1:0]       temp;
+reg [4:0]              bit_n;
     begin
-       for (bit_n =datalen ;bit_n<0 ;bit_n = bit_n-1 ) begin
-            reflect_byte[datalen-1-bit_n] = data[bit_n];
+       for (bit_n = 0; bit_n <datalen ; bit_n =bit_n +1 ) begin
+            temp[bit_n] = data[datalen-1-bit_n];
        end
+    reflect_byte = temp;
     end
 endfunction
 

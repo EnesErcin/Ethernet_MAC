@@ -14,35 +14,36 @@ from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge ,RisingEdge, Timer
 
 
-async def reset(rst,updatecrc):
+async def reset(rst):
     rst.value = 1
-    updatecrc.value = 1
     await   Timer(10,units="ns")
     rst.value = 0
-    updatecrc.value = 0
     await   Timer(10,units="ns")
 
 async def gen_messeage():
     mycalc = Calculator(Crc32.CRC32)
     message = ["1","2","3","4","5","6","7","8","9"]
+    package = []
     for i in range(0,len(message)):
         message[i] = ord(message[i])
+        package.append(int(message[i]))
     message = bytes(message)
-    crc_res = mycalc.checksum(message)
+    crc_res = hex(mycalc.checksum(message))[2:]
 
-    return message,crc_res
+    return package,crc_res
 
-async def feed_messeage(data,updtcrc,clk,result_ver):
-    message,crc_res = await gen_messeage()
+async def feed_messeage(data,updtcrc,clk,result_ver,dut):
+    package,crc_res = await gen_messeage()
 
     for i in range (0,7):
         data.value = message[i]
-        await RisingEdge(clk)
+        await Timer(2, units="ns")
         updtcrc.value = 1
-        await RisingEdge(clk)
+        await Timer(2, units="ns")
         updtcrc.value = 0
 
-    assert crc_res == result_ver.value , print("Error", type(result_ver.value),"\t" , result_ver.value , "\t \t" ,crc_res)
+    dut._log.info("{}, \t {}".format(result_ver.value, str(type(result_ver.value))))
+    assert crc_res == str(hex(result_ver.value)), print("Error", type(result_ver.value),"\t" , result_ver.value , "\t \t" ,crc_res)
 
         
 @cocotb.test()
@@ -63,9 +64,9 @@ async def test_bench(dut):
     cocotb.start_soon(clk.start())  #    Initiate Clock
     """ --------      Crc Calculator    -------- """
 
-    await  reset(rst,updatecrc)
+    await  reset(rst)
     
-    await feed_messeage(data,updatecrc,clk,result_ver)
+    await feed_messeage(data,updatecrc,clk,result_ver,dut)
 
     await  Timer(800, units="ns")
     
