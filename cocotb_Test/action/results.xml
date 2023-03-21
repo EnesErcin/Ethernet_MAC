@@ -1,8 +1,6 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1679379527" />
-    <testcase name="test_bench" classname="mycrc" file="/home/enes/Desktop/CRC/cocotb_Test/action/mycrc.py" lineno="49" time="0.006395816802978516" sim_time_ns="48.001" ratio_time="7505.06174248863">
-      <failure />
-    </testcase>
+    <property name="random_seed" value="1679398706" />
+    <testcase name="test_bench" classname="mycrc" file="/home/enes/Desktop/CRC/cocotb_Test/action/mycrc.py" lineno="50" time="0.0551149845123291" sim_time_ns="876.001" ratio_time="15894.062345314467" />
   </testsuite>
 </testsuites>

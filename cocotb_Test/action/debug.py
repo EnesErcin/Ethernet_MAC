@@ -1,6 +1,5 @@
 
 from crc import Calculator, Crc32
-from ast import literal_eval as hextoint
 
 mycalc = Calculator(Crc32.CRC32)
 message = ["1","2","3","4","5","6","7","8","9"]
