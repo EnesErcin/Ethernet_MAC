@@ -3,19 +3,19 @@ module crc32_comb
 (
 input updatecrc,                                                    
 output reg [crc_len-1:0]result,
-input clk,rst,strt,
+input clk,rst,strt,                    
 input  [datalen-1:0] data
 );
 
 reg [crc_len-1:0]   crc_poly        = crc;
-reg [crc_len-1:0]   crc_acc         = {(crc_len){1'b1}};  //Initiate acc
+reg [crc_len-1:0]   crc_acc         = {(crc_len){1'b1}};            //Initiate acc
 reg [11:0]          byte_count =0;                                  //Keep track of bytes
 reg [4:0]           bit_n = 0;                                      //Keep track of bites
-reg [crc_len-1:0]   nresult  ;
-reg [datalen-1:0] data_buf;
-reg [crc_len-1:0] crc_acc_n;
+reg [crc_len-1:0]   nresult  ;                                      //Final CRC Reminder
+reg [datalen-1:0] data_buf;                                         //Databuffer stores reflected databyte
+reg [crc_len-1:0] crc_acc_n;                                        //Crc Accumulator
 
-
+// Dump waveforms with makefile
 `ifdef COCOTB_SIM
 initial begin
     $dumpfile("sim.vcd");
@@ -23,9 +23,7 @@ initial begin
 end    
 `endif
 
-
 generate if (GMII) begin
-        
             always @(*) begin
 
                 if(rst) begin
@@ -45,22 +43,16 @@ generate if (GMII) begin
 
             always @(posedge clk) begin
                 if (updatecrc) begin
-                    $display("\n Recived Message \t   %h, \t %b \t %d",data,data,data_buf);
-
                     data_buf = reflect_byte(data[datalen-1:0]);
-                    $display("\n Reversed Message \t  %h, \t %b \t %d",data_buf,data_buf,data_buf);
-
-
                     crc_acc_n =  {data_buf,{(crc_len-datalen){1'b0}}}^ crc_acc_n;
-                    $display("1|| \t CRC \t %h, \t %b", crc_acc_n ,crc_acc_n );
                     
-                    for (bit_n = 0; bit_n <datalen ; bit_n =bit_n +1 ) begin // loop count = datalen-crc+1 d = 8, crc = 4 , loop = 7
+                    for (bit_n = 0; bit_n <datalen ; bit_n =bit_n +1 ) begin 
+                        // Num of itteration = datalen -- For Single CRC Step
                         crc_acc_n = crc_bit_updt(crc_acc_n[crc_len-1:0],crc[crc_len-1:0],crc_acc_n[crc_len-1]);
-                    $display("2_ %d|| \t CRC %h, \t %b", bit_n,crc_acc_n ,crc_acc_n );
                     end
                     bit_n       <=  0;
-                    byte_count <= byte_count + 1;
-                    $display("3 Byte Count incremented \t %d", byte_count);
+                    byte_count <= byte_count + 1; //  Keep track of bytes processed
+
                 end
                     if(byte_count == byte_len-1) begin
                         nresult      =  ~reflectcrc(crc_acc_n[crc_len-1:0]);
@@ -70,8 +62,8 @@ end endgenerate
 
 
 function [crc_len-1:0]crc_bit_updt (input [crc_len-1:0]crc_acc, input [crc_len-1:0]crc, input bit);
+//      Basic single CRC step
     begin
-       
         if (bit) begin
             crc_bit_updt =   (crc_acc << 1);
             crc_bit_updt =   (crc_bit_updt ^ crc) ;
@@ -83,6 +75,7 @@ function [crc_len-1:0]crc_bit_updt (input [crc_len-1:0]crc_acc, input [crc_len-1
 endfunction
 
 function [datalen-1:0]reflect_byte (input [datalen-1:0]data);
+//      Reflect 8 bits
 reg [datalen-1:0]       temp;
 reg [4:0]              bit_n;
     begin
@@ -94,6 +87,7 @@ reg [4:0]              bit_n;
 endfunction
 
 function [crc_len-1:0]reflectcrc (input [crc_len-1:0]crc_acc);
+//      Reflect 32 bits
 reg [crc_len-1:0]       temp;
 reg [5:0]              bit_n;
     begin
