@@ -271,8 +271,9 @@ int main(void)
 {
     const int32_t len =  5; 
     const int32_t N = 9; 
+    const int32_t N_2 = 10; 
     uint8_t data[N] ={0x31, 0x32 ,0x33 ,0x34 ,0x35 ,0x36 ,0x37, 0x38, 0x39};
-    char data_2[] ="123456789";
+    char data_2[] ="123456789\xd9";
     uint8_t data_3[N] ={0x44, 0x64 ,0x33 ,0x4b ,0x71 ,0x56 ,0x4c, 0x59, 0x52};
     int32_t crc,crc_2;
 
@@ -280,14 +281,14 @@ int main(void)
     uint16_t crc_res;
 
     printf("Message: \n ");
-       for (int byte = 0; byte < N; ++byte)
+       for (int byte = 0; byte < N_2; ++byte)
     {
-        printf(" %c",data[byte]);
+        printf(" %c",data_2[byte]);
     }
     printf("\n");
 
     crc_2 = crc32Slow(data, N);
-    crc = crc32a_formula_normal_reverse(N,data_2);
+    crc = crc32a_formula_normal_reverse(N_2,data_2);
 
     printf("\n \n --------------------------------------------------------------- \n \n ");
     //crc = crc32Slow(data, N);
