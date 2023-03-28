@@ -22,7 +22,7 @@ async def reset(rst,strt):
     rst.value = 0
     await   Timer(10,units="ns")
 
-async def gen_messeage(rndm_mes,dut):
+async def gen_messeage(rndm_mes):
     mycalc = Calculator(Crc32.CRC32)
     
     if(not(rndm_mes)):
@@ -41,7 +41,7 @@ async def gen_messeage(rndm_mes,dut):
     return package,crc_res
 
 async def feed_messeage(data,updtcrc,clk,result_ver,dut,rndm,num_test,log):
-    package,crc_res = await gen_messeage(rndm,dut)
+    package,crc_res = await gen_messeage(rndm)
     
     for i in range (0,9):
         data.value = package[i]
@@ -58,7 +58,7 @@ async def feed_messeage(data,updtcrc,clk,result_ver,dut,rndm,num_test,log):
         dut._log.info("CRC Calculator: \t   {},   ".format(crc_res))
         dut._log.info("CRC Verilog:     \t  {},   ".format(hex(result_ver.value.integer)))
     
-    assert crc_res == str(hex(result_ver.value))[2:], "Cyclic redudancy check is calculated NOT! rigth [{}] times"
+    assert crc_res == str(hex(result_ver.value))[2:], "Cyclic redudancy check is calculated NOT right [{}] times"
     dut._log.info("\n ------------------------ Cyclic redudancy check is calculated rigth [{}] times \n ".format(num_test+1))
         
 @cocotb.test()

@@ -1,0 +1,6 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1680000283" />
+    <testcase name="test_bench" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Framing/my_tests.py" lineno="33" time="0.005067110061645508" sim_time_ns="60.001" ratio_time="11841.26637669976" />
+  </testsuite>
+</testsuites>

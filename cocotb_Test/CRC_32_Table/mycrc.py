@@ -58,6 +58,10 @@ async def feed_messeage(data,updtcrc,clk,result_ver,dut,rndm,num_test,log):
     dut._log.info("\n ------------------------ Cyclic redudancy check is calculated rigth [{}] times \n ".format(num_test+1))
 
 @cocotb.test()
+async def test_bench_2(dut):  
+	await Timer(2000, units="ns")
+
+@cocotb.test()
 async def test_bench(dut):  
 
 
