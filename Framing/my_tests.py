@@ -56,23 +56,23 @@ async def init_tx(dut,len_payload):
     assert (dut.state_reg.value.integer == 0)   #In wrong stage, should be in IDLE
     await RisingEdge(clk)
     assert (dut.state_reg.value.integer == 1)   #In wrong stage, should be in PERMABLE
-    await wait_multiple_clocks(clk,len_permable+1)
+    await wait_multiple_clocks(clk,len_permable)
     assert (dut.state_reg.value.integer == 2)   #In wrong stage, should be in SDF
     await RisingEdge(clk)
     assert (dut.state_reg.value.integer == 7)   #In wrong stage, should be in Dest_Mac
-    await wait_multiple_clocks(clk,len_addr+1)        
+    await wait_multiple_clocks(clk,len_addr)        
     assert (dut.state_reg.value.integer == 8)   #In wrong stage, should be in Source_Mac
-    await wait_multiple_clocks(clk,len_addr+1)
+    await wait_multiple_clocks(clk,len_addr)
     assert (dut.state_reg.value.integer == 3)   #In wrong stage, should be in LEN
-    await wait_multiple_clocks(clk,len_len+1)        
+    await wait_multiple_clocks(clk,len_len)        
     assert (dut.state_reg.value.integer == 4)   #In wrong stage, should be in PAYLOAD
-    await wait_multiple_clocks(clk,len_payload+1)
+    await wait_multiple_clocks(clk,len_payload)
     if (len_payload < 46):
         dut._log.info("Extenstion stage entered")
         assert (dut.state_reg.value.integer == 6)   #In wrong stage, should be in EXT
-        await wait_multiple_clocks(clk,(46-len_payload)+1)
+        await wait_multiple_clocks(clk,(46-len_payload))
     assert (dut.state_reg.value.integer == 5)   #In wrong stage, should be in FCS
-    await wait_multiple_clocks(clk,len_crc+1)
+    await wait_multiple_clocks(clk,len_crc)
     assert (dut.state_reg.value.integer == 0)   #In wrong stage, should be in IDLE
 
 

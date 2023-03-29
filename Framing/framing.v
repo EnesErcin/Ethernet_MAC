@@ -28,11 +28,12 @@ end
 
     reg buffer_data_valid= 0;
 
-    reg     [3:0]               state_reg = 0;
-    reg     [7:0]               data_out;
+    reg         [3:0]               state_reg = 0;
+    reg        [7:0]               data_out;
     reg                         gmii_o_en = 0;
     reg    [8*10-1:0]         data_buf;
     wire                        update_state;
+    reg                        data_out_en;
 
     localparam  IDLE                = 4'd0,
                 PERMABLE            = 4'd1,
@@ -65,6 +66,63 @@ end
     reg [13:0] len_payload = 0;
     reg [31:0] crc_res;
     
+    always @(*) begin
+        case (state_reg)
+            IDLE        :   begin
+                                data_out    =   0;
+                                data_out_en =   0;
+                            end
+
+            PERMABLE    :   begin
+                                data_out_en =   1;
+                                data_out    =   Permable_val;
+                            end
+
+            SDF         :  begin
+                                data_out_en =   1;
+                                data_out    =  Start_Del_val;
+                            end
+
+            Dest_MAC    :   begin
+                                data_out_en =   1;
+                                data_out    = destination_mac_addr[(8*(len_addr-i)-1)-:8]; 
+                            end
+
+            Source_Mac  :   begin
+                                data_out_en =   1;
+                                data_out    = source_mac_addr[(8*(len_addr-i)-1)-:8]; 
+                            end
+
+            LEN         :   begin
+                                data_out_en =   1;
+                                data_out = len_payload[((8*(len_len-i)-1)-1)-:8];
+                            end
+
+            PAYLOAD     :   begin
+                                data_out_en =   1;
+                                data_out = len_payload[((8*(len_len-i)-1)-1)-:8];
+                            end
+
+            EXT         :   begin
+                                data_out    =   1;
+                                data_out_en =   0;
+                            end
+
+            FCS         :   begin
+                                data_out    =   1;
+                                data_out = crc_res[(8*(len_crc-i)-1)-:8];
+                            end
+
+            default     :   begin
+                                 data_out_en =   0;
+                            end 
+        endcase
+    end
+
+
+
+
+
     // Ethernet Frame Stages
     always @(posedge clk) begin
         if (rst) begin
@@ -82,8 +140,7 @@ end
                                         end
                                     end 
                         PERMABLE:   begin
-                                        if(i < len_perm ) begin
-                                            data_out = Permable_val;
+                                        if(i < len_perm-1 ) begin
                                             i  = i +1;
                                         end 
                                         else begin
@@ -92,12 +149,10 @@ end
                                         end
                                     end
                         SDF:        begin
-                                        data_out    = Start_Del_val;
                                         state_reg   = Dest_MAC;
                                     end
                         Dest_MAC:   begin
-                                        if (i < len_addr) begin
-                                            data_out = destination_mac_addr[(8*(len_addr-i)-1)-:8]; 
+                                        if (i < len_addr-1) begin
                                             i = i + 1;
                                         end 
                                         else begin
@@ -106,8 +161,7 @@ end
                                         end
                                     end
                         Source_Mac: begin
-                                        if (i < len_addr) begin
-                                            data_out = source_mac_addr[(8*(len_addr-i)-1)-:8]; 
+                                        if (i < len_addr-1) begin
                                             i = i + 1;
                                         end 
                                         else begin
@@ -116,8 +170,7 @@ end
                                         end  
                                     end
                         LEN:        begin
-                                        if (i < len_len) begin
-                                            data_out = len_payload[((8*(len_len-i)-1)-1)-:8];
+                                        if (i < len_len-1) begin
                                             i = i + 1;
                                         end 
                                         else begin
@@ -126,8 +179,7 @@ end
                                         end  
                                     end
                         PAYLOAD:    begin
-                                        if (i < len_payload) begin
-                                            data_out = data_buf[(8*(len_payload-i)-1)-:8];
+                                        if (i < len_payload-1) begin
                                             i = i + 1;
                                             state_reg = PAYLOAD;
                                         end 
@@ -141,8 +193,7 @@ end
                                     end
 
                         EXT:        begin
-                                        if (i < min_payload_len-len_payload) begin
-                                            data_out = 0;
+                                        if (i < min_payload_len-len_payload-1) begin
                                             i = i + 1;
                                         end 
                                         else begin
@@ -152,8 +203,7 @@ end
                                     end
 
                         FCS:        begin
-                                        if (i < 4) begin
-                                            data_out = crc_res[(8*(len_crc-i)-1)-:8];
+                                        if (i < len_crc-1) begin
                                             i = i + 1;
                                         end 
                                         else begin
@@ -165,6 +215,7 @@ end
                         default: state_reg = IDLE;
                     endcase
             end
+                else state_reg = IDLE;
         end 
     end
 

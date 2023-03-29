@@ -1,7 +1,7 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1680077144" />
-    <testcase name="initate" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/CRC/CRC32/Framing/my_tests.py" lineno="84" time="0.007942438125610352" sim_time_ns="96.001" ratio_time="12087.094476750819" />
-    <testcase name="transmit" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/CRC/CRC32/Framing/my_tests.py" lineno="97" time="0.03086400032043457" sim_time_ns="382.001" ratio_time="12376.911483735408" />
+    <property name="random_seed" value="1680079492" />
+    <testcase name="initate" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/CRC/CRC32/Framing/my_tests.py" lineno="84" time="0.00811910629272461" sim_time_ns="96.001" ratio_time="11824.084639220062" />
+    <testcase name="transmit" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/CRC/CRC32/Framing/my_tests.py" lineno="97" time="0.03296399116516113" sim_time_ns="370.001" ratio_time="11224.399319432088" />
   </testsuite>
 </testsuites>
