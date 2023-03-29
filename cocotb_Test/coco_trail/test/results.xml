@@ -1,6 +1,0 @@
-<testsuites name="results">
-  <testsuite name="all" package="all">
-    <property name="random_seed" value="1679136639" />
-    <testcase name="test_bench" classname="sim" file="/home/enes/Desktop/test/sim.py" lineno="7" time="0.02106332778930664" sim_time_ns="1600.001" ratio_time="75961.45376478844" />
-  </testsuite>
-</testsuites>

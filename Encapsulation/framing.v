@@ -180,7 +180,7 @@ end
                                         data_recive         = 1;
                                         save_payload_buf    = 1'b1; 
                                         buffer_data_valid   = 0;
-                                        len_payload         = 0; //Problematic
+                                        len_payload         = 0; 
                                     end
                                 end
                         end 
@@ -220,7 +220,6 @@ endmodule
 
 
 // Issues
-// The fifo clock ? 
-// Make Recive stage ascnh
-// len_payload calc
+// The fifo?, clock ? 
+// Make Recive stage asynch
 
