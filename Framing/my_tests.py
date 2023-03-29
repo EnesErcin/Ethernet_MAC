@@ -47,8 +47,6 @@ async def init_tx(dut,len_payload):
     dut.en_tx.value = 0
     clk = dut.clk
     await RisingEdge(clk)
-    dut.rst.value = 1
-    await RisingEdge(clk)
     dut.rst.value   = 0
     await RisingEdge(clk)
     dut.en_tx.value = 1
