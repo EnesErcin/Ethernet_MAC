@@ -1,11 +1,9 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1680097793" />
-    <testcase name="initate" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/CRC/Ethernet_Mac/Decapsulation/my_tests.py" lineno="1" time="0.0036497116088867188" sim_time_ns="57.001" ratio_time="15617.94632244578">
-      <failure message="Test failed with RANDOM_SEED=1680097793" />
-    </testcase>
-    <testcase name="transmit" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/CRC/Ethernet_Mac/Decapsulation/my_tests.py" lineno="1" time="0.003025054931640625" sim_time_ns="57.001" ratio_time="18842.963611601514">
-      <failure message="Test failed with RANDOM_SEED=1680097793" />
+    <property name="random_seed" value="1680241815" />
+    <testcase name="initate" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Decapsulation/my_tests.py" lineno="60" time="0.002866029739379883" sim_time_ns="42.001" ratio_time="14654.767681890025" />
+    <testcase name="transmit" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Decapsulation/my_tests.py" lineno="72" time="0.015183210372924805" sim_time_ns="236.001" ratio_time="15543.550685489063">
+      <failure message="Test failed with RANDOM_SEED=1680241815" />
     </testcase>
   </testsuite>
 </testsuites>

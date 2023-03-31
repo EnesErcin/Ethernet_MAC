@@ -12,31 +12,6 @@ async def reset(dut):
     dut.rst.value = 0
     await   Timer(10,units="ns")
 
-async def data_fill(dut,len):
-    assert(len <= 1500) # Maximum Frame Packet Must be 1500 Bytes !
-
-    if (len <46):
-        dut._log.info("Chosen package needs extension on frame. Len of extension : \t {}".format(46-len))
-    
-    await Timer(15,units="ns")
-    dut.buffer_empt.value = 0
-    dut.buffer_ready.value = 1
-    await(RisingEdge(dut.clk))
-
-    for i in range(0,len):
-        dut.data_in.value = random.randint(0,255)
-        dut.read_en.value = 1
-        await(RisingEdge(dut.clk))
-        dut.read_en.value = 0
-
-    await(RisingEdge(dut.clk))
-    dut.buffer_ready.value  = 0
-    dut.buffer_empt.value   = 1
-    await(RisingEdge(dut.clk))
-    await(RisingEdge(dut.clk))
-    assert(dut.buffer_data_valid.value.integer == 1)    # Data did not read completly 
-    assert(dut.len_payload.value.integer    ==  len)  # Data has not been written correct
-
 async def init_tx(dut,len_payload):
     #   Length of frame sections
     len_addr    = 6
@@ -44,17 +19,20 @@ async def init_tx(dut,len_payload):
     len_crc     = 4
     len_permable= 7
     #
-    dut.en_tx.value = 0
+    dut.gmii_en.value = 0
     clk = dut.clk
     await RisingEdge(clk)
     dut.rst.value   = 0
     await RisingEdge(clk)
-    dut.en_tx.value = 1
+    dut.gmii_en.value=1
+    dut.gmii_dv.value=1
+    dut.gmii_er.value=0
+    dut.gmii_data_in.value=0xff
     await RisingEdge(clk)
     assert (dut.state_reg.value.integer == 0)   #In wrong stage, should be in IDLE
     await RisingEdge(clk)
     assert (dut.state_reg.value.integer == 1)   #In wrong stage, should be in PERMABLE
-    await wait_multiple_clocks(clk,len_permable)
+    await wait_multiple_clocks(clk,len_permable-1) # Saves a clock cycle by initaing counter by 1 
     assert (dut.state_reg.value.integer == 2)   #In wrong stage, should be in SDF
     await RisingEdge(clk)
     assert (dut.state_reg.value.integer == 7)   #In wrong stage, should be in Dest_Mac
@@ -89,7 +67,6 @@ async def initate(dut):
     await   Timer(10,units="ns")
     await  reset(dut)
     await   Timer(10,units="ns")
-    await data_fill(dut,16)
 
 
 @cocotb.test()
@@ -103,7 +80,6 @@ async def transmit(dut):
     await  reset(dut)
     await   Timer(10,units="ns")
     len_payload = 50
-    await data_fill(dut,len_payload )
     await Timer(45,units="ns")
     await init_tx(dut,len_payload)
 
