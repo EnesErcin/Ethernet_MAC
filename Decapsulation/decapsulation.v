@@ -9,7 +9,7 @@ module ethernet_decapsulation
     // Output Payload
     output  reg     crc_err,adr_err,len_err, buffer_full,
     output data_out_en,
-
+    input test_in,
     // Ethernet RX Transmission ports
     input [7:0]     gmii_data_in,
     input           gmii_dv,gmii_er,gmii_en,clk,rst
@@ -174,6 +174,14 @@ end
             source_addr                     = 0;
             data_len                        = 0;
             data_crc                        = 0;
+        end
+    end
+
+    reg [3:0] Test = 0;
+
+    always @(posedge clk ) begin
+        if (test_in) begin
+            Test = Test + 1;
         end
     end
 

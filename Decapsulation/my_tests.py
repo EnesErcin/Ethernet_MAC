@@ -3,6 +3,41 @@ from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge ,RisingEdge, Timer
 import random
 
+durations = {
+"DEST"              :6,
+"SOURCE"            :6,
+"PERM"              :7,
+"FCS"               :2,
+"SDF"               :1,
+"Len"               :2,
+"Payload"           :100,
+"len_len "    : 2,
+"len_crc"     : 4,
+"len_permable": 7,
+}
+
+stages = {
+        "IDLE"                  :0,
+        "PERMABLE"              :1,
+        "SDF"                   :2,
+        "LEN"                   :3,
+        "PAYLOAD"               :4,
+        "FCS"                   :5,
+        "EXT"                   :6,
+        "Dest_MAC"              :7,
+        "Source_Mac"            :8       
+}
+
+len_payload = 50
+destination_mac = b'\x02\x35\x28\xfb\xdd\x66'
+source_mac= b'\x07\x22\x27\xac\xdb\x65'
+pay_len = 100                                            #  Length of payload
+pay_len = pay_len.to_bytes(2,'big')
+
+async def wait_clocks(clk,num):
+    for i in range (0,num):
+        await (RisingEdge(clk))
+
 async def reset(dut):
     dut.rst.value   =   1
     await(RisingEdge(dut.clk))
@@ -17,14 +52,12 @@ async def change_data(dut):
         dut.gmii_data_in.value= random.randint(1,16)
         await RisingEdge(dut.clk)
 
-async def send_data(load_type,dut,clk,durations):
-    destination_mac = b'\x02\x35\x28\xfb\xdd\x66'
-    source_mac= b'\x07\x22\x27\xac\xdb\x65'
-    pay_len = 100                                            #  Length of payload
-    pay_len = pay_len.to_bytes(2,'big')
-    #dut._log.info("Hello 0-{} \t 1* {} \t 2* {} \t 3* {} \t \n".format(len(destination_mac),durations["len_addr"],type(durations["len_addr"]),type(len(destination_mac))))
+async def stage_check(dut,expected):
+      await     Timer(1,units="ns")
+      assert (dut.state_reg.value.integer == expected), f"number greater than 0 expected, got: {2}"
 
-    assert(len(destination_mac)==durations["DEST"])      # Destination-Mac Should be defined as 6 bytes
+async def send_data(load_type,dut,clk):
+    assert(len(destination_mac)==durations["DEST"])      # Destination-Mac Should be defined as 6 bytes {}
     assert(len(source_mac)==durations["DEST"])           # Source-Mac Should be defined as 6 bytes
 
     if load_type == "PAYLOAD":
@@ -36,21 +69,19 @@ async def send_data(load_type,dut,clk,durations):
             for i in range (0,durations[load_type]-1):
                 dut.gmii_data_in.value = 0b101010
                 await RisingEdge(clk)
-            dut._log.info("State Reg End PErm {} \t waiting for 2".format(dut.state_reg.value.integer))
-            #assert (dut.state_reg.value.integer == 2)                    #In wrong stage, should be in SDF
+            cocotb.start_soon(stage_check(dut,2))                          #In wrong stage, should be in SDF
 
     elif load_type ==  "DEST":
             for i in range (0,durations[load_type]):
                 dut.gmii_data_in.value = destination_mac[i]
                 await RisingEdge(clk)
-            dut._log.info("End DEst End PErm {} \t waiting for 8".format(dut.state_reg.value.integer))
-            #assert (dut.state_reg.value.integer == 8)                   #In wrong stage, should be in Source_Mac
+            cocotb.start_soon(stage_check(dut,8))                             #In wrong stage, should be in Source_Mac
 
     elif load_type  ==  "SOURCE":
             for i in range (0,durations[load_type]):
                 dut.gmii_data_in.value = source_mac[i]
                 await RisingEdge(clk)
-            #assert (dut.state_reg.value.integer == 3)                   #In wrong stage, should be in LEN
+            cocotb.start_soon(stage_check(dut,3))
 
     elif load_type  ==  "FCS":
                 for i in range (0,durations[load_type]):
@@ -64,11 +95,9 @@ async def send_data(load_type,dut,clk,durations):
 
     elif load_type  ==  "SDF":
                 for i in range (0,durations[load_type]):
-                    dut._log.info("WHyyy")
                     dut.gmii_data_in.value = 0b101011
                     await RisingEdge(clk)
-                dut._log.info("State Reg End PErm {} \t waiting for 7".format(dut.state_reg.value.integer))
-                #assert (dut.state_reg.value.integer == 7)                   #In wrong stage, should be in DEST
+                cocotb.start_soon(stage_check(dut,7))                             #In wrong stage, should be in DEST
 
     elif load_type  ==  "IDLE":
                 for i in range (0,durations[load_type]):
@@ -79,26 +108,12 @@ async def send_data(load_type,dut,clk,durations):
                 for i in range (0,durations[load_type]):
                     dut.gmii_data_in.value = pay_len[i]
                     await RisingEdge(clk)
-                #assert (dut.state_reg.value.integer == 4)                   #In wrong stage, should be in PAYLOAD
+                cocotb.start_soon(stage_check(dut,4))
     else:
         dut.gmii_data_in.value = 0
 
-
-async def init_tx(dut,len_payload):
+async def init_tx(dut):
     #   Length of frame sections
-    durations = {
-    "DEST"              :6,
-    "SOURCE"            :6,
-    "PERM"              :7,
-    "FCS"               :2,
-    "SDF"               :1,
-    "Len"               :2,
-    "Payload"           :100,
-    "len_len "    : 2,
-    "len_crc"     : 4,
-    "len_permable": 7,
-    }
-
     dut.gmii_en.value = 0
     clk = dut.clk
     await RisingEdge(clk)
@@ -110,36 +125,31 @@ async def init_tx(dut,len_payload):
     dut.gmii_dv.value=1
     dut.gmii_er.value=0
     dut.gmii_data_in.value = 0b101010    
-    await RisingEdge(clk)
+    await wait_clocks(clk,1)
 
-    await  send_data("PERM",dut,clk,durations)                  
+    await  send_data("PERM",dut,clk)                  
         
-    await  send_data("SDF",dut,clk,durations)                 
+    await  send_data("SDF",dut,clk)                 
 
-    await  send_data("DEST",dut,clk,durations)            
+    await  send_data("DEST",dut,clk)            
 
-    await  send_data("SOURCE",dut,clk,durations)  
+    await  send_data("SOURCE",dut,clk)  
 
-    await  send_data("Len",dut,clk,durations)       
+    await  send_data("Len",dut,clk)       
     
-    await  send_data("Payload",dut,clk,durations)    
+    await  send_data("Payload",dut,clk)    
     
     if (len_payload < 46):
         dut._log.info("Extenstion stage entered")
         assert (dut.state_reg.value.integer == 6)   #In wrong stage, should be in EXT
-        await wait_multiple_clocks(clk,(46-len_payload))
+        await wait_clocks(clk,(46-len_payload))
     
     assert (dut.state_reg.value.integer == 5)   #In wrong stage, should be in FCS
-    await  send_data("FCS",dut,clk,durations)   
+    await  send_data("FCS",dut,clk)   
     
     assert (dut.state_reg.value.integer == 0)   #In wrong stage, should be in IDLE
 
 
-async def wait_multiple_clocks(clk,num):
-    for i in range (0,num):
-        await (RisingEdge(clk))
-
-        
 @cocotb.test()
 async def transmit(dut):  
     # Input signals of verilog module
@@ -150,10 +160,17 @@ async def transmit(dut):
     await   Timer(10,units="ns")
     await  reset(dut)
     await   Timer(10,units="ns")
-    len_payload = 50
     await Timer(45,units="ns")
-    
 
-    #cocotb.fork(change_data(dut))
-    await init_tx(dut,len_payload)
+    await init_tx(dut)
 
+@cocotb.test()
+async def initate(dut):  
+    # Input signals of verilog module
+    #Control signals
+
+    clk = Clock(dut.clk, 2, 'ns')
+    cocotb.start_soon(clk.start())  #    Initiate Clock
+    await   Timer(10,units="ns")
+    await  reset(dut)
+    await   Timer(10,units="ns")
