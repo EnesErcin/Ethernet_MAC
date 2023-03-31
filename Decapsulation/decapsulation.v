@@ -108,6 +108,7 @@ end
                                         end  
                                     end
                         LEN:        begin
+                                        len_payload[(8*(`len_len-byte_count)-1)-:8]       =    gmii_data_in ;
                                         if (byte_count < `len_len-1) begin
                                             byte_count = byte_count + 1;
                                         end 
