@@ -39,11 +39,9 @@ pay_len = pay_len_int.to_bytes(2,'big')
 async def test(dut):
     assert True  # ends test with success early
 
-
 async def wait_clocks(clk,num):
     for i in range (0,num):
         await (RisingEdge(clk))
-
 
 async def reset(dut):
     dut.rst.value   =   1
@@ -61,7 +59,7 @@ async def change_data(dut):
 
 async def stage_check(dut,expected):
       await     Timer(1,units="ns")
-      assert (dut.state_reg.value.integer == expected), f"My assert messeages: {2}"
+      assert (dut.state_reg.value.integer == stages[expected]), f"Supposed to be in stage\t {expected}"
 
 async def send_data(load_type,dut,clk):
     assert(len(destination_mac)==durations["DEST"])      # Destination-Mac Should be defined as 6 bytes {}
@@ -71,31 +69,31 @@ async def send_data(load_type,dut,clk):
         for i in range(0,pay_len_int):
             dut.gmii_data_in.value= random.randint(0,15)
             await RisingEdge(dut.clk)
-        cocotb.start_soon(stage_check(dut,5))
+        cocotb.start_soon(stage_check(dut,"FCS"))
 
     elif load_type == "PERM":
         for i in range (0,durations[load_type]-1):
             dut.gmii_data_in.value = 0b101010
             await RisingEdge(clk)
-        cocotb.start_soon(stage_check(dut,2))                          #In wrong stage, should be in SDF
+        cocotb.start_soon(stage_check(dut,"SDF"))                          #In wrong stage, should be in SDF
 
     elif load_type ==  "DEST":
         for i in range (0,durations[load_type]):
             dut.gmii_data_in.value = destination_mac[i]
             await RisingEdge(clk)
-        cocotb.start_soon(stage_check(dut,8))                             #In wrong stage, should be in Source_Mac
+        cocotb.start_soon(stage_check(dut,"Source_Mac"))                             #In wrong stage, should be in Source_Mac
 
     elif load_type  ==  "SOURCE":
         for i in range (0,durations[load_type]):
             dut.gmii_data_in.value = source_mac[i]
             await RisingEdge(clk)
-        cocotb.start_soon(stage_check(dut,3))
+        cocotb.start_soon(stage_check(dut,"LEN"))
 
     elif load_type  ==  "FCS":
         for i in range (0,durations[load_type]):
             dut.gmii_data_in.value = 0b101011
             await RisingEdge(clk)
-        cocotb.start_soon(stage_check(dut,0))
+        cocotb.start_soon(stage_check(dut,"IDLE"))
 
     elif load_type  ==  "EXT":
         for i in range (0,durations[load_type]):
@@ -106,7 +104,7 @@ async def send_data(load_type,dut,clk):
         for i in range (0,durations[load_type]):
             dut.gmii_data_in.value = 0b101011
             await RisingEdge(clk)
-        cocotb.start_soon(stage_check(dut,7))                             #In wrong stage, should be in DEST
+        cocotb.start_soon(stage_check(dut,"Dest_MAC"))                             #In wrong stage, should be in DEST
 
     elif load_type  ==  "IDLE":
         for i in range (0,durations[load_type]):
@@ -117,7 +115,7 @@ async def send_data(load_type,dut,clk):
         for i in range (0,durations[load_type]):
             dut.gmii_data_in.value = pay_len[i]
             await RisingEdge(clk)
-        cocotb.start_soon(stage_check(dut,4))
+        cocotb.start_soon(stage_check(dut,"PAYLOAD"))
     else:
         dut.gmii_data_in.value = 0
 

@@ -9,7 +9,6 @@ module ethernet_decapsulation
     // Output Payload
     output  reg     crc_err,adr_err,len_err, buffer_full,
     output data_out_en,
-    input test_in,
     // Ethernet RX Transmission ports
     input [7:0]     gmii_data_in,
     input           gmii_dv,gmii_er,gmii_en,clk,rst
@@ -56,8 +55,6 @@ end
     assign data_out_en = (state_reg == IDLE)? 1'b1:1'b0;
     // Bufferred Data should not be transmitted while still receiving
     assign cont_stages = (gmii_en && gmii_dv && !(gmii_er))? 1'b1:1'b0 ;
-
-    // Select the right output according to stages
 
     // Ethernet Frame Stages
     always @(posedge clk) begin
@@ -175,14 +172,6 @@ end
             source_addr                     = 0;
             data_len                        = 0;
             data_crc                        = 0;
-        end
-    end
-
-    reg [3:0] Test = 0;
-
-    always @(posedge clk ) begin
-        if (test_in) begin
-            Test = Test + 1;
         end
     end
 
