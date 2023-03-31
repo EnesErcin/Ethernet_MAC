@@ -58,28 +58,6 @@ end
     assign cont_stages = (gmii_en && gmii_dv && !(gmii_er))? 1'b1:1'b0 ;
 
     // Select the right output according to stages
-    always @(*) begin
-        case (state_reg)            
-            IDLE        : data_buf    =   0;
-
-            PERMABLE    : data_buf    =   0;
-                            
-            SDF         : data_buf    =   0;
-
-            Dest_MAC    : dest_addr[8*(`len_addr-byte_count)+:8]         =    gmii_buf ; 
-                         
-            Source_Mac  : source_addr[8*(`len_addr-byte_count)+:8]       =    gmii_buf;
-
-            LEN         : data_len[8*(`len_addr-byte_count)-1+:8]          =    gmii_buf;
-
-            PAYLOAD     : data_buf[8*(len_payload-byte_count)-1+:8]        =   gmii_buf;
-
-            EXT         : data_buf    =     0;
-
-            FCS         : data_crc[8*(`len_crc-byte_count)-1+:8]           =    gmii_buf;
-        endcase
-    end
-
 
     // Ethernet Frame Stages
     always @(posedge clk) begin
@@ -110,7 +88,7 @@ end
                                         state_reg   = Dest_MAC;
                                     end
                         Dest_MAC:   begin
-                                        gmii_buf  = gmii_data_in;
+                                        dest_addr[(8*(`len_addr-byte_count)-1)-:8]         =    gmii_data_in ; 
                                         if (byte_count < `len_addr-1) begin
                                             byte_count = byte_count + 1;
                                         end 
@@ -120,7 +98,7 @@ end
                                         end
                                     end
                         Source_Mac: begin
-                                        gmii_buf  = gmii_data_in;
+                                        source_addr[(8*(`len_addr-byte_count)-1)-:8]       =    gmii_data_in ;
                                         if (byte_count < `len_addr-1) begin
                                             byte_count = byte_count + 1;
                                         end 
@@ -130,7 +108,6 @@ end
                                         end  
                                     end
                         LEN:        begin
-                                        gmii_buf  = gmii_data_in;
                                         if (byte_count < `len_len-1) begin
                                             byte_count = byte_count + 1;
                                         end 
@@ -140,7 +117,6 @@ end
                                         end  
                                     end
                         PAYLOAD:    begin
-                                        gmii_buf  = gmii_data_in;
                                         if (byte_count < len_payload-1) begin
                                             byte_count = byte_count + 1;
                                             state_reg = PAYLOAD;
@@ -155,7 +131,6 @@ end
                                     end
 
                         EXT:        begin
-                                        gmii_buf  = gmii_data_in;
                                         if (byte_count < `min_payload_len-len_payload-1) begin
                                             byte_count = byte_count + 1;
                                         end 
@@ -166,7 +141,6 @@ end
                                     end
 
                         FCS:        begin
-                                        gmii_buf  = gmii_data_in;
                                         if (byte_count < `len_crc-1) begin
                                             byte_count = byte_count + 1;
                                         end 
@@ -198,7 +172,6 @@ end
             data_len                        = 0;
             data_crc                        = 0;
             source_addr                     = 0;
-            dest_addr                       = 0;
             data_len                        = 0;
             data_crc                        = 0;
         end

@@ -12,6 +12,11 @@ async def reset(dut):
     dut.rst.value = 0
     await   Timer(10,units="ns")
 
+async def change_data(dut):
+    for i in range(1,1000):
+        dut.gmii_data_in.value= random.randint(1,16)
+        await RisingEdge(dut.clk)
+
 async def init_tx(dut,len_payload):
     #   Length of frame sections
     len_addr    = 6
@@ -27,7 +32,6 @@ async def init_tx(dut,len_payload):
     dut.gmii_en.value=1
     dut.gmii_dv.value=1
     dut.gmii_er.value=0
-    dut.gmii_data_in.value=0xff
     await RisingEdge(clk)
     assert (dut.state_reg.value.integer == 0)   #In wrong stage, should be in IDLE
     await RisingEdge(clk)
@@ -81,5 +85,6 @@ async def transmit(dut):
     await   Timer(10,units="ns")
     len_payload = 50
     await Timer(45,units="ns")
+    cocotb.fork(change_data(dut))
     await init_tx(dut,len_payload)
 
