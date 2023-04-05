@@ -1,7 +1,7 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1680688639" />
-    <testcase name="crc_control" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Decapsulation/my_tests.py" lineno="52" time="0.0005240440368652344" sim_time_ns="0.001" ratio_time="1.9082365787079163" />
-    <testcase name="decapsulation" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Decapsulation/my_tests.py" lineno="179" time="0.03795909881591797" sim_time_ns="1880.001" ratio_time="49527.018781900864" />
+    <property name="random_seed" value="1680696283" />
+    <testcase name="crc_control" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Decapsulation/my_tests.py" lineno="52" time="0.0005621910095214844" sim_time_ns="0.001" ratio_time="1.778754877014419" />
+    <testcase name="decapsulation" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Decapsulation/my_tests.py" lineno="179" time="0.04370856285095215" sim_time_ns="1880.001" ratio_time="43012.1897718503" />
   </testsuite>
 </testsuites>

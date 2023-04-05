@@ -52,7 +52,7 @@ crc_res = (crc_res.to_bytes(4, 'big'))
 @cocotb.test()
 async def crc_control(dut,on = False):
     if on:
-        assert format(crc_res.hex() == hex(dut.data_crc.value.integer)[2:]) # Crc Calc Wrong
+        assert (crc_res.hex() == hex(dut.data_crc.value.integer)[2:]) # Crc Calc Wrong
     else:
         assert True
 

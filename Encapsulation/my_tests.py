@@ -22,6 +22,45 @@ for i in crc_frame:
 crc_res = mycalc.checksum(packet)
 crc_res = (crc_res.to_bytes(4, 'big'))
 
+stages = {
+        "IDLE"                  :0,
+        "PERMABLE"              :1,
+        "SDF"                   :2,
+        "LEN"                   :3,
+        "PAYLOAD"               :4,
+        "FCS"                   :5,
+        "EXT"                   :6,
+        "Dest_MAC"              :7,
+        "Source_MAC"            :8       
+}
+durations = {
+"DEST"              :6,
+"SOURCE"            :6,
+"PERM"              :7,
+"FCS"               :4,
+"SDF"               :1,
+"Len"               :2,
+"Payload"           :100,
+"len_len "    : 2,
+"len_crc"     : 4,
+"len_permable": 7,
+"len_payload" : 0
+}
+
+@cocotb.test()
+async def crc_control(module_crc,calc_crc=crc_res,on = False,):
+    if on:
+        assert (calc_crc.hex() == hex(module_crc.value.integer)[2:]) # Crc Calc Wrong
+    else:
+        assert True
+
+async def wait_stage(dut,load_type):
+    for i in range (0,durations[load_type]):
+        await RisingEdge(dut.clk)
+    await     Timer(1,units="ns")
+
+async def stage_check(dut,expected):
+    assert (dut.state_reg.value.integer == stages[expected]), "Supposed to be in stage\t {}".format(expected)
 
 async def reset(dut):
     dut.rst.value   =   1
@@ -58,40 +97,44 @@ async def data_fill(dut,len):
     assert(dut.len_payload.value.integer    ==  len)  # Data has not been written correct
 
 async def init_tx(dut,len_payload):
-    #   Length of frame sections
-    len_addr    = 6
-    len_len     = 2
-    len_crc     = 4
-    len_permable= 7
-    #
     dut.en_tx.value = 0
     clk = dut.clk
     await RisingEdge(clk)
     dut.rst.value   = 0
     await RisingEdge(clk)
+    
     dut.en_tx.value = 1
     await RisingEdge(clk)
-    assert (dut.state_reg.value.integer == 0)   #In wrong stage, should be in IDLE
-    await RisingEdge(clk)
-    assert (dut.state_reg.value.integer == 1)   #In wrong stage, should be in PERMABLE
-    await wait_multiple_clocks(clk,len_permable)
-    assert (dut.state_reg.value.integer == 2)   #In wrong stage, should be in SDF
-    await RisingEdge(clk)
-    assert (dut.state_reg.value.integer == 7)   #In wrong stage, should be in Dest_Mac
-    await wait_multiple_clocks(clk,len_addr)        
-    assert (dut.state_reg.value.integer == 8)   #In wrong stage, should be in Source_Mac
-    await wait_multiple_clocks(clk,len_addr)
-    assert (dut.state_reg.value.integer == 3)   #In wrong stage, should be in LEN
-    await wait_multiple_clocks(clk,len_len)        
-    assert (dut.state_reg.value.integer == 4)   #In wrong stage, should be in PAYLOAD
-    await wait_multiple_clocks(clk,len_payload)
+    await     Timer(1,units="ns")
+    
+    assert (dut.state_reg.value.integer == 1)   #In wrong stage, should be in PERM
+    await wait_stage(dut, "PERM")
+    
+    cocotb.start_soon(stage_check(dut,"SDF"))
+    await wait_stage(dut, "SDF")
+    
+    cocotb.start_soon(stage_check(dut,"Dest_MAC"))
+    await wait_stage(dut, "DEST")
+    
+    cocotb.start_soon(stage_check(dut,"Source_MAC"))
+    await wait_stage(dut, "DEST")
+
+    cocotb.start_soon(stage_check(dut,"LEN"))
+    await wait_stage(dut, "Len")
+
+    cocotb.start_soon(stage_check(dut,"PAYLOAD"))
+    await wait_stage(dut, "len_payload")
+
     if (len_payload < 46):
         dut._log.info("Extenstion stage entered")
         assert (dut.state_reg.value.integer == 6)   #In wrong stage, should be in EXT
         await wait_multiple_clocks(clk,(46-len_payload))
-    assert (dut.state_reg.value.integer == 5)   #In wrong stage, should be in FCS
-    await wait_multiple_clocks(clk,len_crc)
-    assert (dut.state_reg.value.integer == 0)   #In wrong stage, should be in IDLE
+
+    cocotb.start_soon(stage_check(dut,"FCS"))
+    await wait_stage(dut, "FCS")
+    cocotb.start_soon(crc_control(dut.crc_check,crc_res,True))
+
+    cocotb.start_soon(stage_check(dut,"IDLE"))
 
 
 async def wait_multiple_clocks(clk,num):
@@ -99,18 +142,6 @@ async def wait_multiple_clocks(clk,num):
         await (RisingEdge(clk))
 
         
-@cocotb.test()
-async def initate(dut):  
-    # Input signals of verilog module
-    #Control signals
-
-    clk = Clock(dut.clk, 2, 'ns')
-    cocotb.start_soon(clk.start())  #    Initiate Clock
-    await   Timer(10,units="ns")
-    await  reset(dut)
-    await   Timer(10,units="ns")
-    await data_fill(dut,16)
-
 
 @cocotb.test()
 async def transmit(dut):  
@@ -123,6 +154,7 @@ async def transmit(dut):
     await  reset(dut)
     await   Timer(10,units="ns")
     len_payload = 50
+    durations["len_payload"] = len_payload
     await data_fill(dut,len_payload )
     await Timer(45,units="ns")
     await init_tx(dut,len_payload)

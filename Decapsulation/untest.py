@@ -28,3 +28,4 @@ print(crc_res)
 crc_res = (crc_res.to_bytes(4, 'big'))
 print(crc_res.hex())
 print(hex(crc_res[0]))
+

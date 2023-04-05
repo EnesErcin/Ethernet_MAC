@@ -38,10 +38,10 @@ end
     reg                         buffer_data_valid = 0;                               // Payload read correct or not
     reg         [3:0]                   state_reg = 0;                               // FSN State register, keep track of frame section 
     reg         [7:0]                   data_out;                                    // GMII output buffer
-    reg         [8*10-1:0]              data_buf;                                    // Register that holds data
+    reg         [8*`len_max_payload-1:0]              data_buf;                                    // Register that holds data
     wire                                data_out_en;                                 // Data_out can be transmitted
     reg         [13:0]                  byte_count = 0;                              // Track bytes in each state
-    reg         [13:0]                 len_payload = 0;                              // Keep track of every payloads Byte Length
+    reg         [15:0]                 len_payload = 0;                              // Keep track of every payloads Byte Length
     reg         [31:0]                 crc_res     = {(`len_crc){1'b1}};             // Initate CRC, update with every processed byte
     reg                                save_payload_buf = 0;                         // Save Payload Stages 
     wire        [7:0]                   crc_data_in;
@@ -88,11 +88,11 @@ end
                             end 
 
             LEN         :   begin
-                            data_out    =     len_payload[((8*(`len_len-byte_count)-1)-1)-:8];
+                            data_out    =     len_payload[(8*(`len_len-byte_count)-1)-:8];
                             end 
 
             PAYLOAD     :   begin
-                            data_out     =     len_payload[((8*(`len_len-byte_count)-1)-1)-:8];
+                            data_out     =     data_buf[(8*(len_payload-byte_count)-1)-:8];
                             end 
 
             EXT         : begin
