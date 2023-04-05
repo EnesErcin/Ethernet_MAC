@@ -6,6 +6,8 @@
 TOPLEVEL_LANG ?= verilog
 
 VERILOG_SOURCES += $(PWD)/decapsulation.v
+VERILOG_SOURCES += $(PWD)/crc32_comb.v
+
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
 TOPLEVEL = ethernet_decapsulation

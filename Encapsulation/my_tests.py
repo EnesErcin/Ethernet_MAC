@@ -2,6 +2,26 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge ,RisingEdge, Timer
 import random
+from crc import Calculator, Crc32
+
+mycalc = Calculator(Crc32.CRC32)
+
+destination_mac = bytearray(b'\x02\x35\x28\xfb\xdd\x66')
+source_mac= bytearray(b'\x07\x22\x27\xac\xdb\x65')
+pay_len_int = 50                                            #  Length of payload
+pay_len = bytearray(pay_len_int.to_bytes(2,'big'))
+payload = []
+for i in range(pay_len_int):
+    payload.append(random.randint(1,16))
+payload = bytearray(payload)
+
+crc_frame = [destination_mac,source_mac,pay_len,payload]
+packet = bytearray()
+for i in crc_frame:
+    packet = packet + i
+crc_res = mycalc.checksum(packet)
+crc_res = (crc_res.to_bytes(4, 'big'))
+
 
 async def reset(dut):
     dut.rst.value   =   1
@@ -24,7 +44,7 @@ async def data_fill(dut,len):
     await(RisingEdge(dut.clk))
 
     for i in range(0,len):
-        dut.data_in.value = random.randint(0,255)
+        dut.data_in.value = payload[i]
         dut.read_en.value = 1
         await(RisingEdge(dut.clk))
         dut.read_en.value = 0

@@ -27,6 +27,13 @@ initial begin
 end    
 `endif
 
+    crc32_comb crc_mod(
+        .clk(clk),.rst(rst_crc),
+        .updatecrc(updatecrc),
+        .data(crc_data_in),
+        .result(crc_check)
+    );
+
     //  Define Registers
     reg                         buffer_data_valid = 0;                               // Payload read correct or not
     reg         [3:0]                   state_reg = 0;                               // FSN State register, keep track of frame section 
@@ -37,7 +44,11 @@ end
     reg         [13:0]                 len_payload = 0;                              // Keep track of every payloads Byte Length
     reg         [31:0]                 crc_res     = {(`len_crc){1'b1}};             // Initate CRC, update with every processed byte
     reg                                save_payload_buf = 0;                         // Save Payload Stages 
-
+    wire        [7:0]                   crc_data_in;
+    reg    updatecrc = 0;
+    reg    rst_crc = 1;
+    assign crc_data_in = data_out;
+    wire        [31:0]                  crc_check;
 
     //  Ethernet Frame Encapsulation Stages
     localparam  IDLE                = 4'd0,
@@ -60,23 +71,37 @@ end
     // Select the right output according to stages
     always @(*) begin
         case (state_reg)
-            IDLE        : data_out    =   0;
+            IDLE        :   begin
+                                data_out    =   0;
+                            end
 
             PERMABLE    : data_out    =     Permable_val;
                             
             SDF         : data_out    =     Start_Del_val;
 
-            Dest_MAC    : data_out    =     destination_mac_addr[(8*(`len_addr-byte_count)-1)-:8]; 
+            Dest_MAC    :   begin
+                            data_out    =     destination_mac_addr[(8*(`len_addr-byte_count)-1)-:8]; 
+                            end 
                          
-            Source_Mac  : data_out    =     source_mac_addr[(8*(`len_addr-byte_count)-1)-:8]; 
+            Source_Mac  :   begin
+                            data_out    =     source_mac_addr[(8*(`len_addr-byte_count)-1)-:8]; 
+                            end 
 
-            LEN         : data_out    =     len_payload[((8*(`len_len-byte_count)-1)-1)-:8];
+            LEN         :   begin
+                            data_out    =     len_payload[((8*(`len_len-byte_count)-1)-1)-:8];
+                            end 
 
-            PAYLOAD     : data_out    =     len_payload[((8*(`len_len-byte_count)-1)-1)-:8];
+            PAYLOAD     :   begin
+                            data_out     =     len_payload[((8*(`len_len-byte_count)-1)-1)-:8];
+                            end 
 
-            EXT         : data_out    =     0;
-
-            FCS         : data_out    =     crc_res[(8*(`len_crc-byte_count)-1)-:8];
+            EXT         : begin
+                            data_out    =     0;
+                            end
+            
+            FCS         : begin
+                            data_out    =    crc_check[(8*(`len_crc-byte_count)-1)-:8];
+                        end
         endcase
     end
 
@@ -86,8 +111,10 @@ end
             if (en_tx) begin
                     case (state_reg)
                         IDLE:       begin
+                                    rst_crc    =   1;
                                         if (buffer_data_valid) begin
                                             state_reg = PERMABLE;
+                                            rst_crc    =   0;
                                         end
                                     end 
                         PERMABLE:   begin
@@ -101,6 +128,7 @@ end
                                     end
                         SDF:        begin
                                         state_reg   = Dest_MAC;
+                                        updatecrc   =   1;
                                     end
                         Dest_MAC:   begin
                                         if (byte_count < `len_addr-1) begin
@@ -150,6 +178,7 @@ end
                                         else begin
                                             state_reg = FCS;
                                             byte_count = 0;
+                                            updatecrc   =   0;
                                         end
                                     end
 

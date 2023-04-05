@@ -7,10 +7,10 @@ module ethernet_decapsulation
 )
 (
     // Output Payload
-    output  reg     crc_err,adr_err,len_err, buffer_full,
+    output  reg     ncrc_err,adr_err,len_err, buffer_full,
     output data_out_en,
     // Ethernet RX Transmission ports
-    input [7:0]     gmii_data_in,
+    input wire [7:0]     gmii_data_in,
     input           gmii_dv,gmii_er,gmii_en,clk,rst
 );
 
@@ -26,7 +26,7 @@ end
     reg         [3:0]                   state_reg = 0;                               // FSM State register, keep track of frame section 
     reg         [8*10-1:0]              data_buf;                                    // Payload Buffer that holds data
     reg         [13:0]                  byte_count = 0;                              // Track bytes in each state
-    reg         [31:0]                 crc_res     = {(`len_crc){1'b1}};             // Initate CRC, update with every processed byte
+    wire        [31:0]                 crc_check     ;             // Initate CRC, update with every processed byte
     reg         [15:0]                 len_payload = 0;                              // Keep track of every Recived Payload Length
     
     wire                               cont_stages;
@@ -36,6 +36,10 @@ end
     reg         [8*`len_crc-1:0]                    data_crc;  
     reg         [7:0] gmii_buf;
 
+    reg updatecrc_reg = 0;
+    reg rst_crc_reg   = 1;
+
+    
     //  Ethernet Frame Encapsulation Stages
     localparam  IDLE                = 4'd0,
                 PERMABLE            = 4'd1,
@@ -52,9 +56,19 @@ end
                Start_Del_val= 8'b101011;                                            // IEEE defined Permable and Delimeter bytes
 
 
+    crc32_comb crc_mod(
+        .clk(clk),.rst(rst_crc),
+        .updatecrc(updatecrc),
+        .data(gmii_data_in),
+        .result(crc_check)
+    );
+
     assign data_out_en = (state_reg == IDLE)? 1'b1:1'b0;
     // Bufferred Data should not be transmitted while still receiving
     assign cont_stages = (gmii_en && gmii_dv && !(gmii_er))? 1'b1:1'b0 ;
+
+    assign updatecrc = updatecrc_reg;
+    assign rst_crc   = rst_crc_reg;
 
     // Ethernet Frame Stages
     always @(posedge clk) begin
@@ -73,6 +87,8 @@ end
                                         end
                                     end 
                         PERMABLE:   begin
+                                        rst_crc_reg      = 1;
+                                        updatecrc_reg    = 0;
                                         if(byte_count < `len_perm-1 ) begin
                                             byte_count  = byte_count +1;
                                         end 
@@ -81,8 +97,10 @@ end
                                             byte_count = 0;
                                         end
                                     end
-                        SDF:  begin
+                        SDF:        begin
                                         state_reg   = Dest_MAC;
+                                        rst_crc_reg     = 0;
+                                        updatecrc_reg   = 1;
                                     end
                         Dest_MAC:   begin
                                         dest_addr[(8*(`len_addr-byte_count)-1)-:8]         =    gmii_data_in ; 
@@ -121,10 +139,13 @@ end
                                         end 
                                         else begin
                                             byte_count= 0;
-                                            if (len_payload <= `min_payload_len)
+                                            if (len_payload <= `min_payload_len) begin
                                                 state_reg = EXT;
-                                            else
+                                                updatecrc_reg   = 1;
+                                            end else begin
+                                                updatecrc_reg   = 0;
                                                 state_reg = FCS;
+                                            end
                                         end  
                                     end
 
@@ -135,14 +156,20 @@ end
                                         else begin
                                             state_reg = FCS;
                                             byte_count = 0;
+                                            updatecrc_reg   = 0;
                                         end
                                     end
 
                         FCS:        begin
+                                        data_crc[(8*(`len_crc-byte_count)-1)-:8]       =    gmii_data_in ;
                                         if (byte_count < `len_crc-1) begin
                                             byte_count = byte_count + 1;
                                         end 
                                         else begin
+                                            if (data_crc == crc_check) begin
+                                                ncrc_err     = 1;
+                                            end else
+                                                ncrc_err     = 0;
                                             byte_count= 0;
                                             state_reg = IDLE;
                                         end 
@@ -164,11 +191,9 @@ end
             len_payload                     = 0;
             state_reg                       =IDLE;
             data_buf                        = 0;
-            crc_res                         = {(`len_crc){1'b1}};
             source_addr                     = 0;
             dest_addr                       = 0;
             data_len                        = 0;
-            data_crc                        = 0;
             source_addr                     = 0;
             data_len                        = 0;
             data_crc                        = 0;

@@ -1,22 +1,30 @@
 import sys
-destination_mac = b'\x02\x35\x28\xfb\xdd\x66'
-source_mac= b'\x07\x22\x27\xac\xdb\x65'
+import random
+from crc import Calculator, Crc32
 
-pay_len = 1000
-pay_len = pay_len.to_bytes(2,'big')
+mycalc = Calculator(Crc32.CRC32)
 
-print(hex(pay_len[0]),type(pay_len[0]))
-print(len(destination_mac))
 
-durations = {
-"DEST"              :6,
-"SOURCE"            :6,
-"PERM"              :7,
-"FCS"               :2,
-"SDF"               :1,
-"Len"               :2,
-"Payload"           :100,
-"len_len "    : 2,
-"len_crc"     : 4,
-"len_permable": 7,
-}
+pay_len_int = 100                                            #  Length of payload
+pay_len = bytearray(pay_len_int.to_bytes(2,'big'))
+
+len_payload = 50
+destination_mac = bytearray(b'\x02\x35\x28\xfb\xdd\x66')
+source_mac= bytearray(b'\x07\x22\x27\xac\xdb\x65')
+pay_len_int = 100                                            #  Length of payload
+pay_len = bytearray(pay_len_int.to_bytes(2,'big'))
+payload = []
+for i in range(1000):
+    payload.append(random.randint(1,16))
+
+payload = bytearray(payload)
+
+frame = [destination_mac,source_mac,pay_len,payload]
+packet = bytearray()
+packet  = destination_mac + source_mac + pay_len + payload
+
+crc_res = mycalc.checksum(packet)
+print(crc_res)
+crc_res = (crc_res.to_bytes(4, 'big'))
+print(crc_res.hex())
+print(hex(crc_res[0]))

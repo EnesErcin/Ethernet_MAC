@@ -2,6 +2,9 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge ,RisingEdge, Timer
 import random
+from crc import Calculator, Crc32
+
+mycalc = Calculator(Crc32.CRC32)
 
 durations = {
 "DEST"              :6,
@@ -29,15 +32,30 @@ stages = {
         "Source_Mac"            :8       
 }
 
-len_payload = 50
-destination_mac = b'\x02\x35\x28\xfb\xdd\x66'
-source_mac= b'\x07\x22\x27\xac\xdb\x65'
-pay_len_int = 100                                            #  Length of payload
-pay_len = pay_len_int.to_bytes(2,'big')
+destination_mac = bytearray(b'\x02\x35\x28\xfb\xdd\x66')
+source_mac= bytearray(b'\x07\x22\x27\xac\xdb\x65')
+pay_len_int = 50                                            #  Length of payload
+pay_len = bytearray(pay_len_int.to_bytes(2,'big'))
+payload = []
+for i in range(pay_len_int):
+    payload.append(random.randint(1,16))
+payload = bytearray(payload)
+
+crc_frame = [destination_mac,source_mac,pay_len,payload]
+packet = bytearray()
+for i in crc_frame:
+    packet = packet + i
+crc_res = mycalc.checksum(packet)
+crc_res = (crc_res.to_bytes(4, 'big'))
+
 
 @cocotb.test()
-async def test(dut):
-    assert True  # ends test with success early
+async def crc_control(dut,on = False):
+    if on:
+        assert format(crc_res.hex() == hex(dut.data_crc.value.integer)[2:]) # Crc Calc Wrong
+    else:
+        assert True
+
 
 async def wait_clocks(clk,num):
     for i in range (0,num):
@@ -53,8 +71,8 @@ async def reset(dut):
     await   Timer(10,units="ns")
 
 async def change_data(dut):
-    for i in range(1,1000):
-        dut.gmii_data_in.value= random.randint(1,16)
+    for i in range(1,pay_len_int):
+        dut.gmii_data_in.value= payload[i]
         await RisingEdge(dut.clk)
 
 async def stage_check(dut,expected):
@@ -67,7 +85,7 @@ async def send_data(load_type,dut,clk):
 
     if load_type == "PAYLOAD":
         for i in range(0,pay_len_int):
-            dut.gmii_data_in.value= random.randint(0,15)
+            dut.gmii_data_in.value= payload[i]
             await RisingEdge(dut.clk)
         cocotb.start_soon(stage_check(dut,"FCS"))
 
@@ -91,9 +109,11 @@ async def send_data(load_type,dut,clk):
 
     elif load_type  ==  "FCS":
         for i in range (0,durations[load_type]):
-            dut.gmii_data_in.value = 0b101011
+            dut.gmii_data_in.value = crc_res[i]
             await RisingEdge(clk)
         cocotb.start_soon(stage_check(dut,"IDLE"))
+        await RisingEdge(clk)
+        cocotb.start_soon(crc_control(dut,True))
 
     elif load_type  ==  "EXT":
         for i in range (0,durations[load_type]):
@@ -146,12 +166,10 @@ async def init_tx(dut):
     
     await  send_data("PAYLOAD",dut,clk)  
 
-    #cocotb.start_soon(test(dut))  
-
-    if (len_payload < 46):
+    if (pay_len_int < 46):
         dut._log.info("Extenstion stage entered")
         assert (dut.state_reg.value.integer == 6)   #In wrong stage, should be in EXT
-        await wait_clocks(clk,(46-len_payload))
+        await wait_clocks(clk,(46-pay_len_int))
     
     await  send_data("FCS",dut,clk)   
 
@@ -159,7 +177,7 @@ async def init_tx(dut):
     
 
 @cocotb.test()
-async def transmit(dut):  
+async def decapsulation(dut):  
     # Input signals of verilog module
     #Control signals
 
