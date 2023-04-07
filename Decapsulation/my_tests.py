@@ -19,7 +19,6 @@ durations = {
 "len_permable": 7,
 }
 
-
 stages = {
         "IDLE"                  :0,
         "PERMABLE"              :1,

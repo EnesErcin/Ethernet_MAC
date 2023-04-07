@@ -1,6 +1,6 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1680084232" />
-    <testcase name="test_bench" classname="mycrc" file="/home/enes/Desktop/Ethernet/Mac_Implementation/CRC/CRC32/cocotb_Test/CRC_32_Simple/mycrc.py" lineno="64" time="0.7942252159118652" sim_time_ns="17458.001" ratio_time="21981.171902174035" />
+    <property name="random_seed" value="1680701576" />
+    <testcase name="test_bench" classname="mycrc" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/CRC_Algorithms/CRC_32_Simple/mycrc.py" lineno="64" time="1.0722935199737549" sim_time_ns="17458.001" ratio_time="16280.990861930506" />
   </testsuite>
 </testsuites>
