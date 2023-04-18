@@ -5,14 +5,19 @@
 
 TOPLEVEL_LANG ?= verilog
 
-VERILOG_SOURCES += $(PWD)/framing.v
-VERILOG_SOURCES += $(PWD)/../crc32_comb.v
+VERILOG_SOURCES +=$(PWD)/../global.svh
+VERILOG_SOURCES +=$(PWD)/encapsulation.sv
+VERILOG_SOURCES +=$(PWD)/../crc32_comb.sv
+
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
-TOPLEVEL = ethernet_encapsulation
+TOPLEVEL =encapsulation 
+
+#System verilog features enables
+COMPILE_ARGS +=-g2005-sv
 
 # MODULE is the basename of the Python test file
-MODULE = my_tests
+MODULE =my_tests
 
 SIM = icarus
 WAVES = 1
