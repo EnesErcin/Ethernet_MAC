@@ -8,6 +8,9 @@ TOPLEVEL_LANG ?= verilog
 VERILOG_SOURCES += $(PWD)/global.svh
 VERILOG_SOURCES += $(PWD)/crc32_comb.sv
 
+
+include $(PWD)/TestParams.mak
+
 # System Verilog Support for IVERILOG
 COMPILE_ARGS += -g2005-sv
 

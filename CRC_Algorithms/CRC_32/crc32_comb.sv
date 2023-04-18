@@ -22,10 +22,14 @@ localparam crc_len = global::crc_len,
 
 logic [11:0] payload_len;
 
+int makefile_param ;
 // Determine a payload length for testing purposes
 `ifdef testing
 initial begin
   payload_len = global::payload_len;
+  $display("Payload len %d",`payload);
+  makefile_param = `payload;
+  $display("***** Make file param into reg %d \n", makefile_param);
 end
 `endif 
 

@@ -5,6 +5,5 @@ package global;
   parameter crc_len = 32;
   parameter crc_poly = 32'h04C11DB7;
   parameter datalen = 8;
-  `define testing = 1
   parameter payload_len = 11'd9;
 endpackage
