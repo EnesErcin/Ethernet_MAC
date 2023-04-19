@@ -19,7 +19,7 @@ always_ff @(posedge wclk) begin
 
   if (wr_ready) begin
     wrt_ptr = wrt_ptr + 1;
-  end else if(wr_srstn) begin
+  end else if(!wr_srstn) begin
     wrt_ptr= 0;
   end
 

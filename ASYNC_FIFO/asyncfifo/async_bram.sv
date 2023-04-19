@@ -14,6 +14,9 @@ module async_bram #(
     
 logic [WIDTH-1:0] data_regs [SIZE-1:0];
 
+//$display("Data Regs 0 %d", data_regs[0]);
+//$display("Data Regs 1 %d", data_regs[1]);
+
 always_ff @(posedge wr_clk) begin
     if(wr_en) begin
       data_regs[wrt_ptr[SIZE-1:0]] <= data_in;

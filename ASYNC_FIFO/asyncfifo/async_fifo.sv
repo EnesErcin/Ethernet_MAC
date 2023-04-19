@@ -56,9 +56,9 @@ empt_gen #(
 rd_pointer  #(.SIZE(SIZE)) 
    rd_pointer(
       .rclk(rclk),
-      .rd_en(rd_en),
+      .rd_en(r_en),
       .rd_srstn(rd_srstn),
-      .empty(rempt),
+      .empty(empt),
              
       .read_ptr(read_ptr)
   );
@@ -67,7 +67,7 @@ rd_pointer  #(.SIZE(SIZE))
 wr_pointer #(.SIZE(SIZE)) 
   wr_pointer(
       .wclk(wclk),
-      .wr_en(rd_en),
+      .wr_en(r_en),
       .wr_srstn(wr_srstn),
       .full(full),
              
