@@ -1,11 +1,11 @@
 module rd_pointer #(
-   parameter WIDTH = 8
+   parameter PTR_LEN = 8
 )(
     input                   rclk,
     input                   rd_en,
     input                   rd_srstn,
-    input                   empty,
-    output logic [WIDTH:0] read_ptr 
+    input    wire           empty,
+    output logic [PTR_LEN:0] read_ptr 
 );
 
 logic rd_ready;

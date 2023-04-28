@@ -3,16 +3,14 @@ module wr_pointer #(
 )(
     input                   wclk,
     input                   wr_en,
-    input                   wr_srstn,
-    input                   full,
+    input       wire        wr_srstn,
+    input       wire        full,
            
     output logic [WIDTH:0] wrt_ptr 
 );
 
 logic wr_ready ;
-
-
-assign full = (wrt_ptr == WIDTH)? 1'b1 : 1'b0;  
+ 
 assign wr_ready = wr_en && wr_srstn && ~(full);
 
 always_ff @(posedge wclk) begin

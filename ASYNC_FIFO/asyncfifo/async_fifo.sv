@@ -1,6 +1,7 @@
 module async_fifo #( 
     parameter SIZE  = 8,
-    parameter WIDTH = $clog2(SIZE) + 1
+    parameter WIDTH = 8,
+    parameter PTR_LEN = $clog2(SIZE)
 )(
     input             arst_n,
     input             wclk,
@@ -44,21 +45,23 @@ syncher wr_rst_scnch_m(
 );
 
 logic empt;
-logic full;
-logic [WIDTH:0] read_ptr ;
-logic [WIDTH:0] wrt_ptr ;
+logic full_gen;
+logic [PTR_LEN:0] read_ptr ;
+logic [PTR_LEN:0] wrt_ptr ;
 
 empt_gen #(
-  .WIDTH(WIDTH)
+  .PTR_LEN(PTR_LEN)
 ) empt_gen (
     .rd_pointer(read_ptr),
     .wr_pointer(wrt_ptr),
     
-    .full(full),
+    .full(full_gen),
     .empty(empt)
 );
+logic full;
+assign full = full_gen;
 
-rd_pointer  #(.WIDTH(WIDTH)) 
+rd_pointer  #(.PTR_LEN(PTR_LEN)) 
    rd_pointer(
       .rclk(rclk),
       .rd_en(r_en),
@@ -69,7 +72,7 @@ rd_pointer  #(.WIDTH(WIDTH))
   );
 
 
-wr_pointer #(.WIDTH(WIDTH)) 
+wr_pointer #(.PTR_LEN(PTR_LEN)) 
   wr_pointer(
       .wclk(wclk),
       .wr_en(w_en),
@@ -81,7 +84,8 @@ wr_pointer #(.WIDTH(WIDTH))
 
 async_bram #(
   .WIDTH(WIDTH),
-  .SIZE(SIZE)
+  .SIZE(SIZE),
+  .PTR_LEN(PTR_LEN)
 ) async_bram  (
     .wr_clk(wclk),
     .rd_clk(rclk),
@@ -91,7 +95,8 @@ async_bram #(
     .read_ptr(read_ptr),
     .wrt_ptr(wrt_ptr),
     .rd_en(r_en),
-    .wr_en(w_en)
+    .wr_en(w_en),
+    .full(full)
 );
 
 endmodule
