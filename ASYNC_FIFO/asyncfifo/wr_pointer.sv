@@ -1,12 +1,12 @@
 module wr_pointer #(
-   parameter WIDTH = 8
+   parameter PTR_LEN = 8
 )(
     input                   wclk,
     input                   wr_en,
     input       wire        wr_srstn,
     input       wire        full,
            
-    output logic [WIDTH:0] wrt_ptr 
+    output logic [PTR_LEN:0] wrt_ptr 
 );
 
 logic wr_ready ;

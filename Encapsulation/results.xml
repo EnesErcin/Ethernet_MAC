@@ -1,7 +1,8 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1682683842" />
-    <testcase name="crc_control" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Encapsulation/my_tests.py" lineno="50" time="0.0005974769592285156" sim_time_ns="0.001" ratio_time="1.6737047086991221" />
-    <testcase name="transmit" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Encapsulation/my_tests.py" lineno="146" time="0.028096675872802734" sim_time_ns="367.00100000000003" ratio_time="13062.079003988258" />
+    <property name="random_seed" value="1682689968" />
+    <testcase name="transmit" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Encapsulation/my_tests.py" lineno="141" time="0.0019412040710449219" sim_time_ns="14.001" ratio_time="7212.533812822402">
+      <failure message="Test failed with RANDOM_SEED=1682689968" />
+    </testcase>
   </testsuite>
 </testsuites>

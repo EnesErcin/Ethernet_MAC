@@ -22,7 +22,6 @@ initial begin
     $dumpvars(0,async_fifo);
 
     for (int i =0 ; i<WIDTH-1 ;i++ ) begin
-        $display(i);
         $dumpvars(0,async_bram.data_regs[i]);
     end
 end    

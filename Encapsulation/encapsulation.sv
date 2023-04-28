@@ -7,19 +7,13 @@ module encapsulation
 )(
     // Payload Buffer Ports
     input  [7:0]     data_in ,
-    input            data_in_clk,
-    input            read_en,
+    input            eth_tx_clk,
     input            buffer_ready, 
-    input            buffer_empt,
-    output  logic    data_recived,
 
     // Control Signals
-    input           en_tx,
+    input           eth_tx_en,
     input           clk,        // Ethernet controller clock not gmii clock
-    input           rst,
-
-    // TX to GMII Buffer
-    output  logic   buf_dv
+    input           rst
 );
 
 // Dump waveforms with makefile
@@ -99,17 +93,15 @@ end
 // Ethernet Frame Stages
 always_ff @(posedge clk) begin
   if (!rst) begin
-    if (en_tx) begin
+    if (eth_tx_en) begin
 
       unique case (state_reg)
 
         IDLE:  begin
           rst_crc = 1;
-          buf_dv = 0;
           
           if (buffer_data_valid) begin
               state_reg = PERMABLE;
-              buf_dv  = 1;
               rst_crc = 0;
           end
         end 
@@ -194,40 +186,7 @@ always_ff @(posedge clk) begin
   end 
 end    
 
-// Fill the payload buffer
-always @(posedge clk) begin
-  if (!rst) begin
-    case (save_payload_buf)
-      
-      1'b0 : begin
-        if (buffer_ready) begin
-            if(state_reg == IDLE) begin
-                data_recived = 1;
-                save_payload_buf = 1'b1; 
-                buffer_data_valid  = 0;
-                len_payload = 0; 
-            end
-        end
-      end 
-      
-      1'b1: begin
-        if(read_en) begin
-          data_buf = data_buf <<8;
-          data_buf[7:0] = data_in;
-          len_payload = len_payload +1;
-        end else begin
-          if (buffer_empt) begin
-            buffer_data_valid <= 1;
-            save_payload_buf <= 1'b0;
-          end
-        end 
-      end
-      
-      default: save_payload_buf  <=1'b0;
-      
-      endcase
-    end
-end
+
 
 //  Global Synchronous Reset
 always @(posedge clk ) begin
@@ -240,7 +199,6 @@ always @(posedge clk ) begin
         data_out                        = 0;
         buffer_data_valid               = 0;
         byte_count                      = 0;
-        buf_dv  = 0;
     end
 end
 

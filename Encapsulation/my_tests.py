@@ -47,7 +47,6 @@ durations = {
 "len_payload" : 0
 }
 
-@cocotb.test()
 async def crc_control(module_crc,calc_crc=crc_res,on = False,):
     if on:
         assert (calc_crc.hex() == hex(module_crc.value.integer)[2:]) # Crc Calc Wrong
@@ -64,7 +63,7 @@ async def stage_check(dut,expected):
 
 async def reset(dut):
     dut.rst.value   =   1
-    await(RisingEdge(dut.clk))
+    await(RisingEdge(dut.sys_clk))
     await   Timer(2,units="ns")
     assert  (dut.state_reg.value.binstr == "0000") #  Reset did not restarted fsm
     await   Timer(10,units="ns")
@@ -74,26 +73,22 @@ async def reset(dut):
 async def data_fill(dut,len):
     assert(len <= 1500) # Maximum Frame Packet Must be 1500 Bytes !
 
+    w_clk = dut.eth_tx_clk
+
     if (len <46):
         dut._log.info("Chosen package needs extension on frame. Len of extension : \t {}".format(46-len))
     
-    await Timer(15,units="ns")
-    dut.buffer_empt.value = 0
-    dut.buffer_ready.value = 1
-    await(RisingEdge(dut.clk))
+    await(RisingEdge(w_clk))
 
     for i in range(0,len):
         dut.data_in.value = payload[i]
-        dut.read_en.value = 1
-        await(RisingEdge(dut.clk))
-        dut.read_en.value = 0
+        dut.w_en.value = 1
+        await(RisingEdge(w_clk))
 
-    await(RisingEdge(dut.clk))
-    dut.buffer_ready.value  = 0
-    dut.buffer_empt.value   = 1
-    await(RisingEdge(dut.clk))
-    await(RisingEdge(dut.clk))
-    assert(dut.buffer_data_valid.value.integer == 1)    # Data did not read completly 
+    await(RisingEdge(dut.wclk))
+    dut.w_en.value  = 0
+    await(RisingEdge(dut.wclk))
+    await(RisingEdge(dut.wclk))
     assert(dut.len_payload.value.integer    ==  len)  # Data has not been written correct
 
 async def init_tx(dut,len_payload):
@@ -148,14 +143,20 @@ async def transmit(dut):
     # Input signals of verilog module
     #Control signals
 
-    clk = Clock(dut.clk, 2, 'ns')
+    clk = Clock(dut.sys_clk, 4, 'ns')
     cocotb.start_soon(clk.start())  #    Initiate Clock
     await   Timer(10,units="ns")
+    eth_clk = Clock(dut.eth_tx_clk, 8, 'ns')
+    cocotb.start_soon(eth_clk.start())  #    Initiate Clock
+
     await  reset(dut)
     await   Timer(10,units="ns")
+
     len_payload = 50
     durations["len_payload"] = len_payload
+
     await data_fill(dut,len_payload )
+
     await Timer(45,units="ns")
     await init_tx(dut,len_payload)
 
