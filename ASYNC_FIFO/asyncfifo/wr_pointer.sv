@@ -6,7 +6,7 @@ module wr_pointer #(
     input                   wr_srstn,
     input                   full,
            
-    output logic [SIZE:0] wrt_ptr
+    output logic [SIZE:0] wrt_ptr = 0
 );
 
 logic wr_ready ;

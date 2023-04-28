@@ -19,6 +19,11 @@ module async_fifo #(
 initial begin
     $dumpfile("sim.vcd");
     $dumpvars(0,async_fifo);
+
+    for (int i =0 ; i<WIDTH-1 ;i++ ) begin
+        $display(i);
+        $dumpvars(0,async_bram.data_regs[i]);
+    end
 end    
 `endif
 
@@ -48,7 +53,7 @@ empt_gen #(
 ) empt_gen (
     .rd_pointer(read_ptr),
     .wr_pointer(wrt_ptr),
-
+    
     .full(full),
     .empty(empt)
 );
@@ -67,7 +72,7 @@ rd_pointer  #(.SIZE(SIZE))
 wr_pointer #(.SIZE(SIZE)) 
   wr_pointer(
       .wclk(wclk),
-      .wr_en(r_en),
+      .wr_en(w_en),
       .wr_srstn(wr_srstn),
       .full(full),
              

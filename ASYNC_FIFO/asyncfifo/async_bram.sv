@@ -7,19 +7,16 @@ module async_bram #(
     input        [WIDTH-1:0] data_in,      
     output logic [WIDTH-1:0] data_out,
     input        [SIZE:0]  read_ptr,
-    input        [SIZE:0]  wrt_ptr,
+    input        [SIZE-1:0]  wrt_ptr,
     input                    rd_en,
     input                    wr_en
 );
     
 logic [WIDTH-1:0] data_regs [SIZE-1:0];
 
-//$display("Data Regs 0 %d", data_regs[0]);
-//$display("Data Regs 1 %d", data_regs[1]);
-
 always_ff @(posedge wr_clk) begin
     if(wr_en) begin
-      data_regs[wrt_ptr[SIZE-1:0]] <= data_in;
+      data_regs[ wrt_ptr[SIZE-1:0]] <= data_in;
     end 
 end
 
