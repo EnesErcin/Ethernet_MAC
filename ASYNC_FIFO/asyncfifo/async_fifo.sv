@@ -1,6 +1,6 @@
 module async_fifo #( 
-    parameter WIDTH = 8,
-    parameter SIZE  = 8
+    parameter SIZE  = 8,
+    parameter WIDTH = $clog2(SIZE) + 1
 )(
     input             arst_n,
     input             wclk,
@@ -30,7 +30,7 @@ end
 logic wr_srstn, rd_srstn;
 
 syncher rd_rst_scnch_m(
-    .clk(wclk),
+    .clk(rclk),
     .n_asignal(arst_n),
 
     .n_ssignal(rd_srstn)
@@ -45,11 +45,11 @@ syncher wr_rst_scnch_m(
 
 logic empt;
 logic full;
-logic [SIZE:0] read_ptr ;
-logic [SIZE:0] wrt_ptr ;
+logic [WIDTH:0] read_ptr ;
+logic [WIDTH:0] wrt_ptr ;
 
 empt_gen #(
-  .SIZE(SIZE)
+  .WIDTH(WIDTH)
 ) empt_gen (
     .rd_pointer(read_ptr),
     .wr_pointer(wrt_ptr),
@@ -58,7 +58,7 @@ empt_gen #(
     .empty(empt)
 );
 
-rd_pointer  #(.SIZE(SIZE)) 
+rd_pointer  #(.WIDTH(WIDTH)) 
    rd_pointer(
       .rclk(rclk),
       .rd_en(r_en),
@@ -69,7 +69,7 @@ rd_pointer  #(.SIZE(SIZE))
   );
 
 
-wr_pointer #(.SIZE(SIZE)) 
+wr_pointer #(.WIDTH(WIDTH)) 
   wr_pointer(
       .wclk(wclk),
       .wr_en(w_en),
