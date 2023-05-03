@@ -25,6 +25,7 @@ VERILOG_SOURCES +=$(PWD)/../ASYNC_FIFO/asyncfifo/wr_pointer.sv
 VERILOG_SOURCES +=$(PWD)/../ASYNC_FIFO/asyncfifo/rd_pointer.sv
 VERILOG_SOURCES +=$(PWD)/../ASYNC_FIFO/asyncfifo/empt_gen.sv
 VERILOG_SOURCES +=$(PWD)/../ASYNC_FIFO/asyncfifo/async_bram.sv
+VERILOG_SOURCES +=$(PWD)/../ASYNC_FIFO/asyncfifo/buf_ready.sv
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
 TOPLEVEL =transmit

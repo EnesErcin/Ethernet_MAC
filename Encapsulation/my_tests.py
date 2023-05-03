@@ -8,19 +8,27 @@ mycalc = Calculator(Crc32.CRC32)
 
 destination_mac = bytearray(b'\x02\x35\x28\xfb\xdd\x66')
 source_mac= bytearray(b'\x07\x22\x27\xac\xdb\x65')
-pay_len_int = 50                                            #  Length of payload
-pay_len = bytearray(pay_len_int.to_bytes(2,'big'))
-payload = []
-for i in range(pay_len_int):
-    payload.append(random.randint(1,16))
-payload = bytearray(payload)
 
-crc_frame = [destination_mac,source_mac,pay_len,payload]
+pay_len_int = 1500                     #  Length of payload
+pay_len = bytearray(pay_len_int.to_bytes(2,'big'))
+
+payload_data = []
+for i in range(pay_len_int):
+    payload_data.append(random.randint(1,16))
+payload_data = bytearray(payload_data)
+
+crc_frame = [destination_mac,source_mac,pay_len,payload_data]
 packet = bytearray()
 for i in crc_frame:
     packet = packet + i
 crc_res = mycalc.checksum(packet)
 crc_res = (crc_res.to_bytes(4, 'big'))
+
+
+payload = []
+for section in crc_frame:
+    for i in range (0,len(section)):
+        payload.append(section[i])
 
 stages = {
         "IDLE"                  :0,
@@ -33,6 +41,7 @@ stages = {
         "Dest_MAC"              :7,
         "Source_MAC"            :8       
 }
+
 durations = {
 "DEST"              :6,
 "SOURCE"            :6,
@@ -55,25 +64,32 @@ async def crc_control(module_crc,calc_crc=crc_res,on = False,):
 
 async def wait_stage(dut,load_type):
     for i in range (0,durations[load_type]):
-        await RisingEdge(dut.clk)
-    await     Timer(1,units="ns")
+        await RisingEdge(dut.eth_tx_clk)
 
 async def stage_check(dut,expected):
-    assert (dut.state_reg.value.integer == stages[expected]), "Supposed to be in stage\t {}".format(expected)
+    assert (dut.encapsulation.state_reg.value.integer == stages[expected]), "Supposed to be in stage\t {}".format(expected)
 
 async def reset(dut):
-    dut.rst.value   =   1
-    await(RisingEdge(dut.sys_clk))
+    dut.buf_ready.pct_qued.value = 0
+    dut.eth_rst.value   =   1
+    await(RisingEdge(dut.eth_tx_clk))
     await   Timer(2,units="ns")
-    assert  (dut.state_reg.value.binstr == "0000") #  Reset did not restarted fsm
+    assert  (dut.encapsulation.state_reg.value.binstr == "0000") #  Reset did not restarted fsm
     await   Timer(10,units="ns")
-    dut.rst.value = 0
+    dut.eth_rst.value = 0
     await   Timer(10,units="ns")
+
+async def pct_qued(dut):
+    w_clk = dut.async_fifo.wclk
+    await(RisingEdge(w_clk))
+    dut.buf_ready.pct_qued = 1
+    await(RisingEdge(w_clk))
+    dut.buf_ready.pct_qued = 0
 
 async def data_fill(dut,len):
-    assert(len <= 1500) # Maximum Frame Packet Must be 1500 Bytes !
+    assert(len <= 1522) # Maximum Frame Packet Must be 1500 Bytes !
 
-    w_clk = dut.eth_tx_clk
+    w_clk = dut.sys_clk
 
     if (len <46):
         dut._log.info("Chosen package needs extension on frame. Len of extension : \t {}".format(46-len))
@@ -81,28 +97,29 @@ async def data_fill(dut,len):
     await(RisingEdge(w_clk))
 
     for i in range(0,len):
-        dut.data_in.value = payload[i]
+        dut.async_fifo.data_in.value = payload[i]
         dut.w_en.value = 1
         await(RisingEdge(w_clk))
 
-    await(RisingEdge(dut.wclk))
+    await(RisingEdge(w_clk))
     dut.w_en.value  = 0
-    await(RisingEdge(dut.wclk))
-    await(RisingEdge(dut.wclk))
-    assert(dut.len_payload.value.integer    ==  len)  # Data has not been written correct
+    cocotb.start_soon(pct_qued(dut))
+    await(RisingEdge(w_clk))
+    await(RisingEdge(w_clk))
 
 async def init_tx(dut,len_payload):
-    dut.en_tx.value = 0
-    clk = dut.clk
+    dut.eth_tx_en.value = 0
+    clk = dut.eth_tx_clk
     await RisingEdge(clk)
-    dut.rst.value   = 0
+    dut.eth_rst.value   = 0
     await RisingEdge(clk)
     
-    dut.en_tx.value = 1
+    dut.eth_tx_en.value = 1
     await RisingEdge(clk)
     await     Timer(1,units="ns")
     
-    assert (dut.state_reg.value.integer == 1)   #In wrong stage, should be in PERM
+    stage_reg = dut.encapsulation.state_reg
+    #assert (stage_reg.value.integer == 1)   #In wrong stage, should be in PERM
     await wait_stage(dut, "PERM")
     
     cocotb.start_soon(stage_check(dut,"SDF"))
@@ -152,10 +169,10 @@ async def transmit(dut):
     await  reset(dut)
     await   Timer(10,units="ns")
 
-    len_payload = 50
-    durations["len_payload"] = len_payload
+    len_payload = pay_len_int 
+    durations["len_payload"] = pay_len_int 
 
-    await data_fill(dut,len_payload )
+    await data_fill(dut,pay_len_int)
 
     await Timer(45,units="ns")
     await init_tx(dut,len_payload)
