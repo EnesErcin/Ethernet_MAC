@@ -6,7 +6,7 @@ module async_bram #(
     input                    wr_clk,
     input                    rd_clk,
     input        [WIDTH-1:0] data_in,      
-    output logic [WIDTH-1:0] data_out,
+    output       [WIDTH-1:0] data_out,
     input        [PTR_LEN:0]  read_ptr,
     input        [PTR_LEN:0]  wrt_ptr,
     input                    rd_en,
@@ -28,12 +28,7 @@ always_ff @(posedge wr_clk) begin
     end 
 end
 
-always_ff @(posedge rd_clk) begin
-    if(rd_en) begin
-       data_out <= data_regs[r_ptr[PTR_LEN-1:0]];
-    end else begin
-       data_out <= 0;
-    end
-end
+assign data_out  =  (rd_en) ? data_regs[r_ptr[PTR_LEN-1:0]]: 0;
+
 
 endmodule

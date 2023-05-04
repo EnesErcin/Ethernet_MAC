@@ -10,8 +10,8 @@ input [WIDTH-1:0] data_in,
 input pct_qued
 );
 
-localparam [47:0] destination_mac_addr =  48'h023528fbdd66;
-localparam [47:0] source_mac_addr      =  48'h702227acdb65;
+localparam [47:0] destination_mac_addr =  48'h40ac14dfbb66;
+localparam [47:0] source_mac_addr      =  48'he044e435dba6;
 
 // Dump waveforms with makefile
 `ifdef COCOTB_SIM

@@ -3,30 +3,49 @@ from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge ,RisingEdge, Timer
 import random
 from crc import Calculator, Crc32
+from basic_funcs import rvrs_bits
 
 mycalc = Calculator(Crc32.CRC32)
 
-destination_mac = bytearray(b'\x02\x35\x28\xfb\xdd\x66')
-source_mac= bytearray(b'\x07\x22\x27\xac\xdb\x65')
+dest_mac = bytearray(b'\x02\x35\x28\xfb\xdd\x66')
+destination_mac = bytearray()
+
+src_mac= bytearray(b'\x07\x22\x27\xac\xdb\x65')
+source_mac = bytearray()
+
+# Reversng each byte
+for byt in src_mac:
+    source_mac = source_mac + (rvrs_bits(byt)).to_bytes(1, 'big')
+
+for byt in dest_mac:
+    destination_mac = destination_mac + (rvrs_bits(byt)).to_bytes(1, 'big')
 
 pay_len_int = 1500                     #  Length of payload
-pay_len = bytearray(pay_len_int.to_bytes(2,'big'))
+pay_len_rvr = bytearray(pay_len_int.to_bytes(2,'big'))
+
+pay_len = bytearray()
+for byt in pay_len_rvr:
+    pay_len  = pay_len  + (rvrs_bits(byt)).to_bytes(1, 'big')
 
 payload_data = []
-for i in range(pay_len_int):
+for i in range(0,pay_len_int):
     payload_data.append(random.randint(1,16))
 payload_data = bytearray(payload_data)
 
+
+# Bytes are big endian, Bits are little endian
 crc_frame = [destination_mac,source_mac,pay_len,payload_data]
 packet = bytearray()
 for i in crc_frame:
     packet = packet + i
+
 crc_res = mycalc.checksum(packet)
 crc_res = (crc_res.to_bytes(4, 'big'))
 
+load_to_fifo = [pay_len,payload_data]
 
 payload = []
-for section in crc_frame:
+for section in load_to_fifo:
     for i in range (0,len(section)):
         payload.append(section[i])
 
@@ -67,6 +86,7 @@ async def wait_stage(dut,load_type):
         await RisingEdge(dut.eth_tx_clk)
 
 async def stage_check(dut,expected):
+    await Timer(1,units="ps")
     assert (dut.encapsulation.state_reg.value.integer == stages[expected]), "Supposed to be in stage\t {}".format(expected)
 
 async def reset(dut):
@@ -80,23 +100,23 @@ async def reset(dut):
     await   Timer(10,units="ns")
 
 async def pct_qued(dut):
-    w_clk = dut.async_fifo.wclk
-    await(RisingEdge(w_clk))
-    dut.buf_ready.pct_qued = 1
-    await(RisingEdge(w_clk))
-    dut.buf_ready.pct_qued = 0
+    clk = dut.eth_tx_clk
+    await(RisingEdge(clk))
+    dut.pct_qued.value = 1
+    await(RisingEdge(clk))
+    dut.pct_qued.value = 0
 
-async def data_fill(dut,len):
-    assert(len <= 1522) # Maximum Frame Packet Must be 1500 Bytes !
+async def data_fill(dut,num):
+    assert(num <= 1522) # Maximum Frame Packet Must be 1500 Bytes !
 
     w_clk = dut.sys_clk
 
-    if (len <46):
+    if (num <46):
         dut._log.info("Chosen package needs extension on frame. Len of extension : \t {}".format(46-len))
     
     await(RisingEdge(w_clk))
 
-    for i in range(0,len):
+    for i in range(0,num):
         dut.async_fifo.data_in.value = payload[i]
         dut.w_en.value = 1
         await(RisingEdge(w_clk))
@@ -119,7 +139,7 @@ async def init_tx(dut,len_payload):
     await     Timer(1,units="ns")
     
     stage_reg = dut.encapsulation.state_reg
-    #assert (stage_reg.value.integer == 1)   #In wrong stage, should be in PERM
+    assert (stage_reg.value.integer == 1)   #In wrong stage, should be in PERM
     await wait_stage(dut, "PERM")
     
     cocotb.start_soon(stage_check(dut,"SDF"))

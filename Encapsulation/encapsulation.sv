@@ -3,7 +3,7 @@
 module encapsulation 
 #(
     parameter [47:0]    destination_mac_addr  = 48'h023528fbdd66,
-    parameter [47:0]    source_mac_addr       = 48'h702227acdb65
+    parameter [47:0]    source_mac_addr       = 48'h072227acdb65
 )(
     // Payload Buffer Ports
     input   [7:0]       data_in ,
@@ -103,9 +103,9 @@ always_comb  begin
                         
         SDF         : data_out  =  Start_Del_val;
 
-        Dest_MAC    : data_out  =  data_in; 
+        Dest_MAC    : data_out  =  destination_mac_addr[(8*(`len_addr-byte_count)-1)-:8];
                         
-        Source_Mac  : data_out  =  data_in; 
+        Source_Mac  : data_out  =  source_mac_addr[(8*(`len_addr-byte_count)-1)-:8];  
                          
         LEN         : data_out  =  data_in;
 
@@ -113,7 +113,7 @@ always_comb  begin
                       
         EXT         : data_out  =  0;
                       
-        FCS         : data_out  =  data_in;
+        FCS         : data_out  =  crc_check[(8*(`len_crc-byte_count)-1)-:8];
     endcase
 end
 
@@ -146,7 +146,6 @@ always_ff @(posedge eth_tx_clk) begin
         SDF:  begin
           state_reg   = Dest_MAC;
           updatecrc   =   1;
-          buf_r_en <= 1;
         end
         
         Dest_MAC:   begin
@@ -164,16 +163,17 @@ always_ff @(posedge eth_tx_clk) begin
           end else begin
               byte_count= 0;
               state_reg = LEN;
+              buf_r_en <= 1;
           end  
         end
         
         LEN: begin
+            len_payload[(8*(`len_len-byte_count)-1)-:8] <= data_in;
           if (byte_count < `len_len-1) begin
               byte_count = byte_count + 1;
           end else begin
               byte_count= 0;
               state_reg = PAYLOAD;
-              len_payload[(8*(`len_len-byte_count)-1)-:8] <= data_in;
           end  
         end
         
