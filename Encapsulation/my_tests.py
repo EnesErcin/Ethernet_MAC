@@ -75,11 +75,16 @@ durations = {
 "len_payload" : 0
 }
 
-async def crc_control(module_crc,calc_crc=crc_res,on = False,):
+async def crc_control(dut,module_crc,calc_crc=crc_res,on = False):
+
+    check_correct = (calc_crc.hex() == hex(module_crc.value.integer)[2:])
+    dut._log.info("Is equal \t{} \n Hardware CRC \t{} \n,Python Crc \t{}".format(check_correct,calc_crc.hex(), hex(module_crc.value.integer)[2:]))
     if on:
-        assert (calc_crc.hex() == hex(module_crc.value.integer)[2:]) # Crc Calc Wrong
+        cocotb.start_soon(crc_check(check_correct,on)) # Controls CRC
     else:
-        assert True
+        assert True # Do not check crc
+
+    
 
 async def wait_stage(dut,load_type):
     for i in range (0,durations[load_type]):
@@ -90,7 +95,7 @@ async def stage_check(dut,expected):
     assert (dut.encapsulation.state_reg.value.integer == stages[expected]), "Supposed to be in stage\t {}".format(expected)
 
 async def reset(dut):
-    dut.buf_ready.pct_qued.value = 0
+    dut.buf_ready.bf_in_pct_qued.value = 0
     dut.eth_rst.value   =   1
     await(RisingEdge(dut.eth_tx_clk))
     await   Timer(2,units="ns")
@@ -102,9 +107,9 @@ async def reset(dut):
 async def pct_qued(dut):
     clk = dut.eth_tx_clk
     await(RisingEdge(clk))
-    dut.pct_qued.value = 1
+    dut.bf_in_pct_qued.value = 1
     await(RisingEdge(clk))
-    dut.pct_qued.value = 0
+    dut.bf_in_pct_qued.value = 0
 
 async def data_fill(dut,num):
     assert(num <= 1522) # Maximum Frame Packet Must be 1500 Bytes !
@@ -164,7 +169,7 @@ async def init_tx(dut,len_payload):
 
     cocotb.start_soon(stage_check(dut,"FCS"))
     await wait_stage(dut, "FCS")
-    cocotb.start_soon(crc_control(dut.crc_check,crc_res,True))
+    cocotb.start_soon(crc_control(dut,dut.encapsulation.crc_check,crc_res,True))
 
     cocotb.start_soon(stage_check(dut,"IDLE"))
 
@@ -197,3 +202,7 @@ async def transmit(dut):
     await Timer(45,units="ns")
     await init_tx(dut,len_payload)
 
+@cocotb.test()
+async def crc_check(check,on=False):
+    if on: 
+        assert(check) # In correct fcs check

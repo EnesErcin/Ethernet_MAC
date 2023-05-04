@@ -16,13 +16,15 @@ module async_fifo #(
 
 
 // Dump waveforms with makefile
+/*
 `ifdef COCOTB_SIM
 initial begin
-    for (int i =0 ; i<WIDTH-1 ;i++ ) begin
+    for (int i =0 ; i<SIZE-1 ;i++ ) begin
         $dumpvars(0,async_bram.data_regs[i]);
     end
 end    
 `endif
+*/
 
 logic wr_srstn, rd_srstn;
 

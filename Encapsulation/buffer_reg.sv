@@ -34,15 +34,15 @@ end
 
 
 // GMII Transmittion
-always_ff @( posedge gmii_clk_in ) begin : blockName
-    if(tx_en) begin
-        if (byte_count_out != byte_count_in) begin
-           gmii_d = [(8*(byte_count_out))+:8] data_buf;
-           byte_count_out <= byte_count_out + 1;
-        end else begin
-            byte_count_out <= 0;
-        end
+always_ff @( posedge gmii_clk_in ) begin
+  if(tx_en) begin
+    if (byte_count_out != byte_count_in) begin
+       gmii_d = [(8*(byte_count_out))+:8] data_buf;
+       byte_count_out <= byte_count_out + 1;
+    end else begin
+        byte_count_out <= 0;
     end
+  end
 end
 
 assign gmii_clk_in = (tx_en) ? = gmii_clk_out;

@@ -5,53 +5,43 @@ module encapsulation
     parameter [47:0]    destination_mac_addr  = 48'h023528fbdd66,
     parameter [47:0]    source_mac_addr       = 48'h072227acdb65
 )(
-    // Payload Buffer Ports
-    input   [7:0]       data_in ,
-    input               eth_tx_clk,
-    input   [1:0]       buffer_ready, 
-    output       logic  pct_txed,
-    output       logic  buf_r_en,
+    // Buffer signals
+    input   [7:0]        ff_out_data_in , 
+    
+    // Buffer_ready control
+    input   [1:0]        bf_out_buffer_ready,           // Payload counter for fifo buffer
+    output        logic  bf_in_pct_txed,                // Payload transmitted, dec buf counter
+    output        logic  bf_in_r_en,                    // Buffer is ready to be read
 
-    // Control Signals
-    input               eth_tx_en,
-    input               clk,        // Ethernet controller clock not gmii clock
-    input               rst
+    // System Signal
+    input                eth_tx_en,                    
+    input                clk,        
+    input                rst,
+    input                eth_tx_clk           
 );
 
-// Dump waveforms with makefile
-`ifdef COCOTB_SIM
-initial begin
-    $dumpfile("sim.vcd");
-    $dumpvars(0,encapsulation);
-end    
-`endif
 
 crc32_comb crc_mod(
-    .clk(eth_tx_clk),.rst(rst_crc),
-
+    .clk(eth_tx_clk),
+    .rst(rst_crc),
     .updatecrc(updatecrc),
-    
     .data(crc_data_in),
     .result(crc_check)
 );
 
 //  Define Registers
-logic                                 buffer_data_valid = 0;                   // Payload read correct or not
-logic         [3:0]                   state_reg = 0;                   // FSN State logicister, keep track of frame section 
+logic         [3:0]                    state_reg         = 0;                  // Keep track of frame section 
+logic         [7:0]                    data_out;                               // GMII output buffer
+wire                                   data_out_en;                            // Data_out enable when not idle
+logic         [13:0]                   byte_count        = 0;                  // Track bytes in each state
+logic         [15:0]                   len_payload       = 0;                  // Keep track of every payloads Byte Length
+logic         [31:0]                   crc_res           = {(`len_crc){1'b1}}; // Initate CRC, update with every processed byte
+wire          [7:0]                    crc_data_in;                            // Input wire to CRC.
+wire          [31:0]                   crc_check;                              // Wire to extract CRC results from crc_32 module
+logic                                  updatecrc         = 0;                  // Enable crc calculation to start
+logic                                  rst_crc           = 1;                  // Restart signal to pass crc module, Restart after every frame
 
-logic         [7:0]                   data_out;                        // GMII output buffer
-logic         [8*`len_max_payload-1:0]data_buf;                        // logicister that holds data
-wire                                  data_out_en;                       // Data_out can be transmitted
-logic         [13:0]                  byte_count = 0;                  // Track bytes in each state
-logic         [15:0]                  len_payload = 0;                  // Keep track of every payloads Byte Length
-logic         [31:0]                  crc_res     = {(`len_crc){1'b1}}; // Initate CRC, update with every processed byte
-logic                                 save_payload_buf = 0;             // Save Payload Stages 
-wire          [7:0]                   crc_data_in;
-
-logic    updatecrc = 0;
-logic    rst_crc = 1;
 assign crc_data_in = data_out;
-wire        [31:0]                  crc_check;
 
 //  Ethernet Frame Encapsulation Stages
 localparam  IDLE                = 4'd0,
@@ -63,37 +53,13 @@ localparam  IDLE                = 4'd0,
             EXT                 = 4'd6,
             Dest_MAC            = 4'd7,
             Source_Mac          = 4'd8;
-
-localparam Permable_val = 8'b101010,                            
-            Start_Del_val= 8'b101011; // IEEE defined Permable and Delimeter bytes
+            
+// IEEE defined Permable and Delimeter bytes
+localparam  Permable_val = 8'b101010,                            
+            Start_Del_val= 8'b101011; 
 
 // Data out should not be transmitted when IDLE
 assign data_out_en = (state_reg != IDLE)? 1'b1:1'b0;
-
-// Select the right output according to stages
-//
-//always_comb  begin
-//    case (state_reg)
-//        IDLE        : data_out  =  0;
-//
-//        PERMABLE    : data_out  =  Permable_val;
-//                        
-//        SDF         : data_out  =  Start_Del_val;
-//
-//        Dest_MAC    : data_out  =  destination_mac_addr[(8*(`len_addr-byte_count)-1)-:8]; 
-//                        
-//        Source_Mac  : data_out  =  source_mac_addr[(8*(`len_addr-byte_count)-1)-:8]; 
-//                         
-//        LEN         : data_out  =  len_payload[(8*(`len_len-byte_count)-1)-:8];
-//
-//        PAYLOAD     : data_out  =  data_buf[(8*(len_payload-byte_count)-1)-:8];
-//                      
-//        EXT         : data_out  =  0;
-//                      
-//        FCS         : data_out  =  crc_check[(8*(`len_crc-byte_count)-1)-:8];
-//    endcase
-//end
-//
 
 always_comb  begin
     case (state_reg)
@@ -107,9 +73,9 @@ always_comb  begin
                         
         Source_Mac  : data_out  =  source_mac_addr[(8*(`len_addr-byte_count)-1)-:8];  
                          
-        LEN         : data_out  =  data_in;
+        LEN         : data_out  =  ff_out_data_in;
 
-        PAYLOAD     : data_out  =  data_in;
+        PAYLOAD     : data_out  =  ff_out_data_in;
                       
         EXT         : data_out  =  0;
                       
@@ -124,11 +90,11 @@ always_ff @(posedge eth_tx_clk) begin
     if (eth_tx_en) begin
 
       unique case (state_reg)
-
+        
         IDLE:  begin
           rst_crc = 1;
-          pct_txed = 0;
-          if (buffer_ready > 0) begin
+          bf_in_pct_txed = 0;
+          if (bf_out_buffer_ready > 0) begin
               state_reg = PERMABLE;
               rst_crc = 0;
           end
@@ -163,12 +129,12 @@ always_ff @(posedge eth_tx_clk) begin
           end else begin
               byte_count= 0;
               state_reg = LEN;
-              buf_r_en <= 1;
+              bf_in_r_en <= 1;
           end  
         end
         
         LEN: begin
-            len_payload[(8*(`len_len-byte_count)-1)-:8] <= data_in;
+            len_payload[(8*(`len_len-byte_count)-1)-:8] <= reflect_byte(ff_out_data_in);
           if (byte_count < `len_len-1) begin
               byte_count = byte_count + 1;
           end else begin
@@ -206,7 +172,7 @@ always_ff @(posedge eth_tx_clk) begin
           end else begin
               byte_count= 0;
               state_reg = IDLE;
-              pct_txed <= 1;
+              bf_in_pct_txed <= 1;
           end 
         end
     
@@ -218,22 +184,31 @@ always_ff @(posedge eth_tx_clk) begin
 end    
 
 
-
 //  Global Synchronous Reset
 always_ff @(posedge eth_tx_clk) begin
     if (rst) begin
         len_payload                     = 0;
         state_reg                       =IDLE;
-        save_payload_buf                =1'b0;
-        data_buf                        = 0;
         crc_res                         = {(`len_crc){1'b1}};
         data_out                        = 0;
-        buffer_data_valid               = 0;
         byte_count                      = 0;
-        pct_txed                        = 0;
+        bf_in_pct_txed                  = 0;
     end
 end
 
+localparam datalen = 8;
+//      Reflect 8 bits
+function automatic [datalen-1:0]reflect_byte (input logic [datalen-1:0]data);
+  logic [datalen-1:0] result;
+  logic [4:0] bit_n;
+
+  begin
+    for (bit_n = 0; bit_n <datalen ; bit_n =bit_n +1 ) begin
+      result[bit_n] = data[datalen-1-bit_n];
+    end
+    return result;
+  end
+endfunction
 
 
 endmodule
