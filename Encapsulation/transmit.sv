@@ -21,9 +21,9 @@ input pct_qued
 // in byte little endian in bit level
 
 // Destination MAC = x02\x35\x28\xfb\xdd\x66
-localparam [47:0] destination_mac_addr =  48'h40ac14dfbb66;
+localparam [47:0] destination_mac_addr =  48'h023528fbdd66;
 // Source Mac      = \x07\x22\x27\xac\xdb\x65
-localparam [47:0] source_mac_addr      =  48'he044e435dba6;
+localparam [47:0] source_mac_addr      =  48'h072227acdb65;
 
 // Dump waveforms with makefile
 `ifdef COCOTB_SIM

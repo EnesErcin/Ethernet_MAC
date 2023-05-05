@@ -7,34 +7,34 @@ from basic_funcs import rvrs_bits
 
 mycalc = Calculator(Crc32.CRC32)
 
-dest_mac = bytearray(b'\x02\x35\x28\xfb\xdd\x66')
-destination_mac = bytearray()
+dest_mac_act = bytearray(b'\x02\x35\x28\xfb\xdd\x66')
+destination_mac_r = bytearray()
 
-src_mac= bytearray(b'\x07\x22\x27\xac\xdb\x65')
-source_mac = bytearray()
+src_mac_act = bytearray(b'\x07\x22\x27\xac\xdb\x65')
+source_mac_r = bytearray()
 
 # Reversng each byte
-for byt in src_mac:
-    source_mac = source_mac + (rvrs_bits(byt)).to_bytes(1, 'big')
+for byt in src_mac_act:
+    source_mac_r = source_mac_r + (rvrs_bits(byt)).to_bytes(1, 'big')
 
-for byt in dest_mac:
-    destination_mac = destination_mac + (rvrs_bits(byt)).to_bytes(1, 'big')
+for byt in dest_mac_act:
+    destination_mac_r = destination_mac_r + (rvrs_bits(byt)).to_bytes(1, 'big')
 
-pay_len_int = 1500                     #  Length of payload
-pay_len_rvr = bytearray(pay_len_int.to_bytes(2,'big'))
+pay_len_int = 1500                    #  Length of payload
+pay_len_act = bytearray(pay_len_int.to_bytes(2,'big'))
 
-pay_len = bytearray()
-for byt in pay_len_rvr:
-    pay_len  = pay_len  + (rvrs_bits(byt)).to_bytes(1, 'big')
+pay_len_rvr = bytearray()
+for byt in pay_len_act:
+    pay_len_rvr  = pay_len_rvr  + (rvrs_bits(byt)).to_bytes(1, 'big')
 
 payload_data = []
 for i in range(0,pay_len_int):
-    payload_data.append(random.randint(1,16))
+    payload_data.append(random.randint(5,45))
 payload_data = bytearray(payload_data)
 
 
 # Bytes are big endian, Bits are little endian
-crc_frame = [destination_mac,source_mac,pay_len,payload_data]
+crc_frame = [dest_mac_act,src_mac_act,pay_len_rvr,payload_data]
 packet = bytearray()
 for i in crc_frame:
     packet = packet + i
@@ -42,7 +42,7 @@ for i in crc_frame:
 crc_res = mycalc.checksum(packet)
 crc_res = (crc_res.to_bytes(4, 'big'))
 
-load_to_fifo = [pay_len,payload_data]
+load_to_fifo = [pay_len_rvr,payload_data]
 
 payload = []
 for section in load_to_fifo:
@@ -75,22 +75,13 @@ durations = {
 "len_payload" : 0
 }
 
-async def crc_control(dut,module_crc,calc_crc=crc_res,on = False):
-
-    check_correct = (calc_crc.hex() == hex(module_crc.value.integer)[2:])
-    dut._log.info("Is equal \t{} \n Hardware CRC \t{} \n,Python Crc \t{}".format(check_correct,calc_crc.hex(), hex(module_crc.value.integer)[2:]))
-    if on:
-        cocotb.start_soon(crc_check(check_correct,on)) # Controls CRC
-    else:
-        assert True # Do not check crc
-
-    
 
 async def wait_stage(dut,load_type):
     for i in range (0,durations[load_type]):
         await RisingEdge(dut.eth_tx_clk)
 
 async def stage_check(dut,expected):
+    dut._log.info("Stages have been checked")
     await Timer(1,units="ps")
     assert (dut.encapsulation.state_reg.value.integer == stages[expected]), "Supposed to be in stage\t {}".format(expected)
 
@@ -111,18 +102,17 @@ async def pct_qued(dut):
     await(RisingEdge(clk))
     dut.bf_in_pct_qued.value = 0
 
+## Fill the async fifo with [Paylen, Payload]
 async def data_fill(dut,num):
     assert(num <= 1522) # Maximum Frame Packet Must be 1500 Bytes !
-
-    w_clk = dut.sys_clk
-
     if (num <46):
         dut._log.info("Chosen package needs extension on frame. Len of extension : \t {}".format(46-len))
     
+    w_clk = dut.sys_clk
     await(RisingEdge(w_clk))
 
     for i in range(0,num):
-        dut.async_fifo.data_in.value = payload[i]
+        dut.data_in.value = payload[i]
         dut.w_en.value = 1
         await(RisingEdge(w_clk))
 
@@ -131,6 +121,8 @@ async def data_fill(dut,num):
     cocotb.start_soon(pct_qued(dut))
     await(RisingEdge(w_clk))
     await(RisingEdge(w_clk))
+    dut._log.info("Last payload data (python) ---> \t \t {}".format(payload[-1]))
+    dut._log.info("Last payload data (verilog) ---> \t \t {}".format((dut.data_in.value.integer)))
 
 async def init_tx(dut,len_payload):
     dut.eth_tx_en.value = 0
@@ -168,17 +160,24 @@ async def init_tx(dut,len_payload):
         await wait_multiple_clocks(clk,(46-len_payload))
 
     cocotb.start_soon(stage_check(dut,"FCS"))
+    
     await wait_stage(dut, "FCS")
-    cocotb.start_soon(crc_control(dut,dut.encapsulation.crc_check,crc_res,True))
-
-    cocotb.start_soon(stage_check(dut,"IDLE"))
-
+    cocotb.start_soon(crc_control(dut ,crc_res  ,activated=True))
 
 async def wait_multiple_clocks(clk,num):
     for i in range (0,num):
         await (RisingEdge(clk))
 
-        
+
+@cocotb.test()       
+async def crc_control(dut,  calc_crc=crc_res  ,  activated = False):
+    if activated:
+        check_correct = (calc_crc.hex() == hex(dut.encapsulation.crc_mod.result.value.integer)[2:])
+        dut._log.info("\t\t\t\t\n\nIs equal \t{} \n Python CRC \t{} \n,Hardware Crc \t{}".format(check_correct,calc_crc.hex(), hex(dut.encapsulation.crc_check.value.integer)[2:]))
+        assert check_correct # Controls CRC
+    else:
+        assert True # Do not check crc
+
 
 @cocotb.test()
 async def transmit(dut):  
@@ -193,16 +192,43 @@ async def transmit(dut):
 
     await  reset(dut)
     await   Timer(10,units="ns")
+ 
+    len_payload = len(payload) 
 
-    len_payload = pay_len_int 
     durations["len_payload"] = pay_len_int 
 
-    await data_fill(dut,pay_len_int)
+    await data_fill(dut,len_payload)
 
     await Timer(45,units="ns")
     await init_tx(dut,len_payload)
 
+
+async def sched():
+    assert False
+    test_schedule = cocotb.scheduler
+    test_schedule.add_test(transmit)
+    
+
 @cocotb.test()
-async def crc_check(check,on=False):
-    if on: 
-        assert(check) # In correct fcs check
+async def main(dut):
+    yield cocotb.start(sched)
+
+""""
+async def run_tests(dut):
+    # Create a scheduler
+    sched = Scheduler()
+
+    # Add test_one to the scheduler
+    sched.add_test(test_one(dut))
+
+    # Add test_two to the scheduler with a delay of 5 ns
+    sched.add_test(test_two(dut), delay=5, units='ns')
+
+    # Start the scheduler
+    await sched.run()
+
+# Top-level coroutine for initializing DUT and starting the test
+@cocotb.test()
+async def test_top(dut):
+    await run_tests(dut)
+"""

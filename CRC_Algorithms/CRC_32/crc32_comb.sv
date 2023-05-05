@@ -1,22 +1,27 @@
-
 module crc32_comb 
 import global::*; // Global Ethernet Module Parameters
 (
   input                           clk,
   input                           rst,
   input                           strt,
-
+  input                           crc_lsb,
   input                           updatecrc,
 
   input   [global::datalen-1:0]   data,
   output  [global::crc_len-1:0]   result
 );
 
+`ifdef COCOTB_SIM
+initial begin
+    $dumpfile("sim.vcd");
+    $dumpvars(0,crc32_comb);
+end    
+`endif
 
 localparam crc_len = global::crc_len,
            datalen = global::datalen;
 
-logic [11:0] payload_len;
+logic [11:0] payload_len = 1515;
 int makefile_param ;
 
 // Determine a payload length for testing purposes
@@ -36,6 +41,10 @@ logic [crc_len-1:0] nresult     = 0;
 logic [11:0]        bit_n       = 0;
 logic [datalen-1:0] data_buf;
 logic [crc_len-1:0] crc         = global::crc_poly;
+wire [crc_len-1:0] mytest;
+
+
+assign mytest = ~reflectcrc(crc_acc_n[crc_len-1:0]);
 
 assign result = nresult;
 

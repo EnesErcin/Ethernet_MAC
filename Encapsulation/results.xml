@@ -1,7 +1,10 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1683201425" />
-    <testcase name="transmit" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Encapsulation/my_tests.py" lineno="183" time="0.7709841728210449" sim_time_ns="18330.001" ratio_time="23774.80841523659" />
-    <testcase name="crc_check" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Encapsulation/my_tests.py" lineno="205" time="0.00012040138244628906" sim_time_ns="0.0010000000002037268" ratio_time="8.305552476939589" />
+    <property name="random_seed" value="1683294520" />
+    <testcase name="crc_control" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Encapsulation/my_tests.py" lineno="172" time="0.0008449554443359375" sim_time_ns="0.001" ratio_time="1.1834943566591423" />
+    <testcase name="transmit" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Encapsulation/my_tests.py" lineno="182" time="0.7244992256164551" sim_time_ns="18338.001" ratio_time="25311.277571617466" />
+    <testcase name="main" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Encapsulation/my_tests.py" lineno="212" time="0" sim_time_ns="0" ratio_time="nan">
+      <failure message="Test failed with RANDOM_SEED=1683294520" />
+    </testcase>
   </testsuite>
 </testsuites>

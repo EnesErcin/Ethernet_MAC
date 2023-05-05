@@ -24,6 +24,7 @@ module encapsulation
 crc32_comb crc_mod(
     .clk(eth_tx_clk),
     .rst(rst_crc),
+    .crc_lsb(crc_lsb),
     .updatecrc(updatecrc),
     .data(crc_data_in),
     .result(crc_check)
@@ -33,13 +34,14 @@ crc32_comb crc_mod(
 logic         [3:0]                    state_reg         = 0;                  // Keep track of frame section 
 logic         [7:0]                    data_out;                               // GMII output buffer
 wire                                   data_out_en;                            // Data_out enable when not idle
-logic         [13:0]                   byte_count        = 0;                  // Track bytes in each state
+logic         [15:0]                   byte_count        = 0;                  // Track bytes in each state
 logic         [15:0]                   len_payload       = 0;                  // Keep track of every payloads Byte Length
 logic         [31:0]                   crc_res           = {(`len_crc){1'b1}}; // Initate CRC, update with every processed byte
 wire          [7:0]                    crc_data_in;                            // Input wire to CRC.
 wire          [31:0]                   crc_check;                              // Wire to extract CRC results from crc_32 module
 logic                                  updatecrc         = 0;                  // Enable crc calculation to start
 logic                                  rst_crc           = 1;                  // Restart signal to pass crc module, Restart after every frame
+logic                                  crc_lsb           = 0;                   // CRC last byte
 
 assign crc_data_in = data_out;
 
@@ -153,6 +155,7 @@ always_ff @(posedge eth_tx_clk) begin
                   state_reg = EXT;
               else
                   state_reg = FCS;
+                  crc_lsb    = 1;
           end  
         end
     
@@ -163,10 +166,12 @@ always_ff @(posedge eth_tx_clk) begin
               state_reg = FCS;
               byte_count = 0;
               updatecrc   =   0;
+              crc_lsb     = 1;
           end
         end
     
         FCS: begin
+          crc_lsb    = 0;
           if (byte_count < `len_crc-1) begin
               byte_count = byte_count + 1;
           end else begin
@@ -193,6 +198,7 @@ always_ff @(posedge eth_tx_clk) begin
         data_out                        = 0;
         byte_count                      = 0;
         bf_in_pct_txed                  = 0;
+        crc_lsb                         = 0;
     end
 end
 

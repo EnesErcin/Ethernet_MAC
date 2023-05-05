@@ -52,7 +52,7 @@ async def feed_messeage(data,updtcrc,clk,result_ver,dut,rndm,num_test,log):
         
     await Timer(2, units="ns")
 
-    if(log):
+    if(True):
         dut._log.info("Final example !!!! \n")
         dut._log.info("Messeage :       \t  {},   ".format(bytes(package)))
         dut._log.info("CRC Calculator: \t   {},   ".format(crc_res))

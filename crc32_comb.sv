@@ -1,18 +1,16 @@
-
 module crc32_comb 
 import global::*; // Global Ethernet Module Parameters
 (
-  input                           clk,
-  input                           rst,
-  input                           strt,
+  input                                clk,
+  input                                rst,
+  input                                strt,
+  input                                crc_lsb,
+  input                                updatecrc,
 
-  input                           updatecrc,
-
-  input   [global::datalen-1:0]   data,
-  output  [global::crc_len-1:0]   result
+  input        [global::datalen-1:0]   data,
+  output  wire [global::crc_len-1:0]   result
 );
 
-// Dump waveforms with makefile
 `ifdef COCOTB_SIM
 initial begin
     $dumpfile("sim.vcd");
@@ -23,7 +21,7 @@ end
 localparam crc_len = global::crc_len,
            datalen = global::datalen;
 
-logic [11:0] payload_len;
+logic [11:0] payload_len = 1515;
 int makefile_param ;
 
 // Determine a payload length for testing purposes
@@ -43,8 +41,12 @@ logic [crc_len-1:0] nresult     = 0;
 logic [11:0]        bit_n       = 0;
 logic [datalen-1:0] data_buf;
 logic [crc_len-1:0] crc         = global::crc_poly;
+wire [crc_len-1:0] mytest;
 
-assign result = nresult;
+
+assign result = (crc_lsb)? ~reflectcrc(crc_acc_n[crc_len-1:0]) : 0;
+wire [datalen-1:0] data_r;
+assign data_r = reflect_byte(data);
 
   always_comb begin  
     if(rst) begin
@@ -59,8 +61,7 @@ assign result = nresult;
 
   always_ff @(posedge clk) begin 
     if (updatecrc) begin
-      data_buf = reflect_byte(data[datalen-1:0]); // Ref_in --> CRC parementer reflect incoming data byte
-      crc_acc_n = {data_buf, {(crc_len-datalen){1'b0}}} ^ crc_acc_n; // Pad the data and xor with first byte of the crc accumulator
+      crc_acc_n = {data_r, {(crc_len-datalen){1'b0}}} ^ crc_acc_n; // Pad the data and xor with first byte of the crc accumulator
 
       // Itterrate over every bit of data size  
       for (bit_n = 0; bit_n <datalen ; bit_n =bit_n +1 ) begin           
@@ -71,9 +72,6 @@ assign result = nresult;
       byte_count <= byte_count + 1; // Keep track of bytes processed
     
     end
-        if(byte_count == payload_len-1) begin
-          nresult = ~reflectcrc(crc_acc_n[crc_len-1:0]); //Ref_out --> CRC parameter reflect output crc result at the end
-        end
   end
 
 
