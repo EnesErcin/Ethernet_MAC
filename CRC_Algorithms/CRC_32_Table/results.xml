@@ -1,7 +1,7 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1680444568" />
-    <testcase name="test_bench_2" classname="mycrc" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/CRC_Algorithms/CRC_32_Table/mycrc.py" lineno="60" time="0.0006728172302246094" sim_time_ns="2000.001" ratio_time="2972576.9646718637" />
-    <testcase name="test_bench" classname="mycrc" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/CRC_Algorithms/CRC_32_Table/mycrc.py" lineno="64" time="0.4531691074371338" sim_time_ns="7158.001" ratio_time="15795.43018826145" />
+    <property name="random_seed" value="1683612558" />
+    <testcase name="test_bench_2" classname="mycrc" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/CRC_Algorithms/CRC_32_Table/mycrc.py" lineno="60" time="0.0009181499481201172" sim_time_ns="2000.001" ratio_time="2178294.519424565" />
+    <testcase name="test_bench" classname="mycrc" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/CRC_Algorithms/CRC_32_Table/mycrc.py" lineno="64" time="0.33707094192504883" sim_time_ns="7158.001" ratio_time="21235.888680050193" />
   </testsuite>
 </testsuites>

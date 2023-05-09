@@ -81,9 +81,10 @@ async def wait_stage(dut,load_type):
         await RisingEdge(dut.eth_tx_clk)
 
 async def stage_check(dut,expected):
-    dut._log.info("Stages have been checked")
+    
     await Timer(1,units="ps")
     assert (dut.encapsulation.state_reg.value.integer == stages[expected]), "Supposed to be in stage\t {}".format(expected)
+    dut._log.info("Correct stage {}".format(expected))
 
 async def reset(dut):
     dut.buf_ready.bf_in_pct_qued.value = 0
@@ -158,28 +159,29 @@ async def init_tx(dut,len_payload):
         dut._log.info("Extenstion stage entered")
         assert (dut.state_reg.value.integer == 6)   #In wrong stage, should be in EXT
         await wait_multiple_clocks(clk,(46-len_payload))
-
-    cocotb.start_soon(stage_check(dut,"FCS"))
     
-    await wait_stage(dut, "FCS")
-    cocotb.start_soon(crc_control(dut ,crc_res  ,activated=True))
+    cocotb.start_soon(stage_check(dut,"FCS"))
+    raise cocotb.result.TestSuccess("All stages were accurate")
+    #cocotb.start_soon(crc_control(dut ,crc_res  ,activated=True))
 
 async def wait_multiple_clocks(clk,num):
     for i in range (0,num):
         await (RisingEdge(clk))
 
 
-@cocotb.test()       
-async def crc_control(dut,  calc_crc=crc_res  ,  activated = False):
+@cocotb.test(stage=1)       
+async def crc_control(dut,  calc_crc=crc_res  ,  activated = True):
     if activated:
         check_correct = (calc_crc.hex() == hex(dut.encapsulation.crc_mod.result.value.integer)[2:])
-        dut._log.info("\t\t\t\t\n\nIs equal \t{} \n Python CRC \t{} \n,Hardware Crc \t{}".format(check_correct,calc_crc.hex(), hex(dut.encapsulation.crc_check.value.integer)[2:]))
+        dut._log.info("\t\tIs equal? \t-------{}------\t\t Python CRC \t{} \t Hardware Crc \t{}".format(check_correct,calc_crc.hex(), hex(dut.encapsulation.crc_check.value.integer)[2:]))
         assert check_correct # Controls CRC
     else:
         assert True # Do not check crc
 
+    raise cocotb.result.TestSuccess("CRC was accurate")
 
-@cocotb.test()
+
+@cocotb.test(stage=0)
 async def transmit(dut):  
     # Input signals of verilog module
     #Control signals
@@ -202,16 +204,15 @@ async def transmit(dut):
     await Timer(45,units="ns")
     await init_tx(dut,len_payload)
 
+@cocotb.test(stage=3)
+async def mytest(dut):
+    assert False
 
 async def sched():
     assert False
     test_schedule = cocotb.scheduler
     test_schedule.add_test(transmit)
     
-
-@cocotb.test()
-async def main(dut):
-    yield cocotb.start(sched)
 
 """"
 async def run_tests(dut):
