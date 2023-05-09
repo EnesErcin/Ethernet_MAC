@@ -3,7 +3,8 @@
 module encapsulation 
 #(
     parameter [47:0]    destination_mac_addr  = 48'h023528fbdd66,
-    parameter [47:0]    source_mac_addr       = 48'h072227acdb65
+    parameter [47:0]    source_mac_addr       = 48'h072227acdb65,
+    parameter           GMII = 1
 )(
     // Buffer signals
     input   [7:0]        ff_out_data_in , 
@@ -41,7 +42,10 @@ wire          [7:0]                    crc_data_in;                            /
 wire          [31:0]                   crc_check;                              // Wire to extract CRC results from crc_32 module
 logic                                  updatecrc         = 0;                  // Enable crc calculation to start
 logic                                  rst_crc           = 1;                  // Restart signal to pass crc module, Restart after every frame
-logic                                  crc_lsb           = 0;                   // CRC last byte
+logic                                  crc_lsb           = 0;                  // CRC last byte
+logic         [4:0]                    intr_pct_gap      = 0;                  // Interpacket gap counter, should be 96 bits time
+
+localparam    [4:0]                    dur_gap = (GMII)? 12:24;                           // Interpacket gap duration. GMMI -> 96/8 = 12 MII -> 96/4 = 24
 
 assign crc_data_in = data_out;
 
@@ -94,12 +98,19 @@ always_ff @(posedge eth_tx_clk) begin
       unique case (state_reg)
         
         IDLE:  begin
+
           rst_crc = 1;
           bf_in_pct_txed = 0;
-          if (bf_out_buffer_ready > 0) begin
-              state_reg = PERMABLE;
-              rst_crc = 0;
+
+          if (intr_pct_gap == dur_gap) begin
+              if (bf_out_buffer_ready > 0) begin
+                state_reg = PERMABLE;
+                rst_crc = 0;
+              end 
+          end else begin
+              intr_pct_gap = intr_pct_gap + 1;
           end
+
         end 
 
         PERMABLE:  begin
@@ -178,6 +189,8 @@ always_ff @(posedge eth_tx_clk) begin
               byte_count= 0;
               state_reg = IDLE;
               bf_in_pct_txed <= 1;
+              intr_pct_gap   <= 0;
+
           end 
         end
     
@@ -192,13 +205,14 @@ end
 //  Global Synchronous Reset
 always_ff @(posedge eth_tx_clk) begin
     if (rst) begin
-        len_payload                     = 0;
-        state_reg                       =IDLE;
-        crc_res                         = {(`len_crc){1'b1}};
-        data_out                        = 0;
-        byte_count                      = 0;
-        bf_in_pct_txed                  = 0;
-        crc_lsb                         = 0;
+        len_payload                     <= 0;
+        state_reg                       <=IDLE;
+        crc_res                         <= {(`len_crc){1'b1}};
+        data_out                        <= 0;
+        byte_count                      <= 0;
+        bf_in_pct_txed                  <= 0;
+        crc_lsb                         <= 0;
+        intr_pct_gap                    <= 0;    
     end
 end
 

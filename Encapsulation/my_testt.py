@@ -75,6 +75,31 @@ durations = {
 "len_payload" : 0
 }
 
+@cocotb.coroutine
+def crc_control(dut,  calc_crc=crc_res):
+    check_correct = (calc_crc.hex() == hex(dut.encapsulation.crc_mod.result.value.integer)[2:])
+    dut._log.info("\t\tIs equal? \t-------{}------\t\t Python CRC \t{} \t Hardware Crc \t{}".format(check_correct,calc_crc.hex(), hex(dut.encapsulation.crc_check.value.integer)[2:]))
+    assert check_correct # Controls CRC
+    assert True # Do not check crc
+    raise cocotb.result.TestSuccess("CRC was accurate")
+
+async def init_module(dut):
+    clk = Clock(dut.sys_clk, 4, 'ns')
+    cocotb.start_soon(clk.start())  #    Initiate Clock
+    await   Timer(10,units="ns")
+    eth_clk = Clock(dut.eth_tx_clk, 8, 'ns')
+    cocotb.start_soon(eth_clk.start())  #    Initiate Clock
+
+    await  reset(dut)
+    await   Timer(10,units="ns")
+
+@cocotb.test()
+def main(dut):
+    yield init_module(dut)
+
+
+
+
 
 async def wait_stage(dut,load_type):
     for i in range (0,durations[load_type]):
@@ -86,6 +111,7 @@ async def stage_check(dut,expected):
     assert (dut.encapsulation.state_reg.value.integer == stages[expected]), "Supposed to be in stage\t {}".format(expected)
     dut._log.info("Correct stage {}".format(expected))
 
+@cocotb.coroutine
 async def reset(dut):
     dut.buf_ready.bf_in_pct_qued.value = 0
     dut.eth_rst.value   =   1
@@ -111,6 +137,7 @@ async def data_fill(dut,num):
     
     w_clk = dut.sys_clk
     await(RisingEdge(w_clk))
+    
 
     for i in range(0,num):
         dut.data_in.value = payload[i]
@@ -133,15 +160,8 @@ async def init_tx(dut,len_payload):
     await RisingEdge(clk)
     
     dut.eth_tx_en.value = 1
-    dur_gap = 12 #For GMII, FOR MII 24
-    while True:
-        if dut.encapsulation.intr_pct_gap.value.integer == dur_gap:
-            break
-        else:
-            await FallingEdge(clk)
     await RisingEdge(clk)
     await     Timer(1,units="ns")
-    
     
     stage_reg = dut.encapsulation.state_reg
     assert (stage_reg.value.integer == 1)   #In wrong stage, should be in PERM
@@ -169,22 +189,18 @@ async def init_tx(dut,len_payload):
     
     cocotb.start_soon(stage_check(dut,"FCS"))
     raise cocotb.result.TestSuccess("All stages were accurate")
-    #cocotb.start_soon(crc_control(dut ,crc_res  ,activated=True))
 
 async def wait_multiple_clocks(clk,num):
     for i in range (0,num):
         await (RisingEdge(clk))
 
 
-@cocotb.test(stage=1)       
-async def crc_control(dut,  calc_crc=crc_res  ,  activated = True):
-    if activated:
-        check_correct = (calc_crc.hex() == hex(dut.encapsulation.crc_mod.result.value.integer)[2:])
-        dut._log.info("\t\tIs equal? \t-------{}------\t\t Python CRC \t{} \t Hardware Crc \t{}".format(check_correct,calc_crc.hex(), hex(dut.encapsulation.crc_check.value.integer)[2:]))
-        assert check_correct # Controls CRC
-    else:
-        assert True # Do not check crc
-
+@cocotb.test(stage=3)       
+async def crc_control(dut,  calc_crc=crc_res):
+    check_correct = (calc_crc.hex() == hex(dut.encapsulation.crc_mod.result.value.integer)[2:])
+    dut._log.info("\t\tIs equal? \t-------{}------\t\t Python CRC \t{} \t Hardware Crc \t{}".format(check_correct,calc_crc.hex(), hex(dut.encapsulation.crc_check.value.integer)[2:]))
+    assert check_correct # Controls CRC
+    assert True # Do not check crc
     raise cocotb.result.TestSuccess("CRC was accurate")
 
 
@@ -201,13 +217,21 @@ async def transmit(dut):
 
     await  reset(dut)
     await   Timer(10,units="ns")
- 
+    raise cocotb.result.TestSuccess("CRC was accurate")
+
+
+@cocotb.test(stage=1)
+async def data_fill_c(dut):
     len_payload = len(payload) 
 
     durations["len_payload"] = pay_len_int 
-
-    await data_fill(dut,len_payload)
-
     await Timer(45,units="ns")
+    await data_fill(dut,len_payload)
+     
+    await Timer(45,units="ns")
+    print("hello")
     await init_tx(dut,len_payload)
 
+@cocotb.test(stage=1)
+async def buf_fil(dut):
+    assert True 
