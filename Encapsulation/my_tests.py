@@ -168,24 +168,20 @@ async def init_tx(dut,len_payload):
         await wait_multiple_clocks(clk,(46-len_payload))
     
     cocotb.start_soon(stage_check(dut,"FCS"))
-    raise cocotb.result.TestSuccess("All stages were accurate")
-    #cocotb.start_soon(crc_control(dut ,crc_res  ,activated=True))
 
 async def wait_multiple_clocks(clk,num):
     for i in range (0,num):
         await (RisingEdge(clk))
 
-
-@cocotb.test(stage=1)       
+       
 async def crc_control(dut,  calc_crc=crc_res  ,  activated = True):
+
     if activated:
         check_correct = (calc_crc.hex() == hex(dut.encapsulation.crc_mod.result.value.integer)[2:])
         dut._log.info("\t\tIs equal? \t-------{}------\t\t Python CRC \t{} \t Hardware Crc \t{}".format(check_correct,calc_crc.hex(), hex(dut.encapsulation.crc_check.value.integer)[2:]))
         assert check_correct # Controls CRC
     else:
         assert True # Do not check crc
-
-    raise cocotb.result.TestSuccess("CRC was accurate")
 
 
 @cocotb.test(stage=0)
@@ -211,3 +207,11 @@ async def transmit(dut):
     await Timer(45,units="ns")
     await init_tx(dut,len_payload)
 
+    
+    await Timer(1,units="ps")
+
+    await crc_control(dut,  calc_crc=crc_res  ,  activated = True)
+    
+    dut._log.info("\n \n First transmission has been complete \n \n")
+
+    raise cocotb.result.TestSuccess("Stages was accurate")

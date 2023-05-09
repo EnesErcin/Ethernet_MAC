@@ -27,14 +27,17 @@ VERILOG_SOURCES +=$(PWD)/../ASYNC_FIFO/asyncfifo/empt_gen.sv
 VERILOG_SOURCES +=$(PWD)/../ASYNC_FIFO/asyncfifo/async_bram.sv
 VERILOG_SOURCES +=$(PWD)/../ASYNC_FIFO/asyncfifo/buf_ready.sv
 
-# TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
-TOPLEVEL =transmit
-
 #System verilog features enables
 COMPILE_ARGS +=-g2005-sv
 
 # MODULE is the basename of the Python test file
-MODULE =my_tests
+test1:
+	$(MAKE) sim  MODULE=my_fifo_test 
+test2:
+	$(MAKE) sim  MODULE=my_tests
+
+# TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
+TOPLEVEL =transmit
 
 SIM = icarus
 WAVES = 1
