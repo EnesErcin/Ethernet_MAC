@@ -3,7 +3,7 @@ import cocotb
 import unittest
 
 from my_tests import transmit
-from my_fifo_test import fifo_Test
+from Encapsulation.fifo_test.my_fifo_test import fifo_Test
 
 class TestCase(unittest.TestCase):
     @cocotb.test()

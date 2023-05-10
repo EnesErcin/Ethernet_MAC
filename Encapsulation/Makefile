@@ -34,7 +34,7 @@ COMPILE_ARGS +=-g2005-sv
 test1:
 	$(MAKE) sim  MODULE=my_fifo_test 
 test2:
-	$(MAKE) sim  MODULE=my_tests
+	$(MAKE) sim  MODULE=my_tests 
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
 TOPLEVEL =transmit
