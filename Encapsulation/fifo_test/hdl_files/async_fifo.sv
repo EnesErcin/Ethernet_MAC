@@ -5,7 +5,6 @@ module async_fifo #(
 )(
     input             arst_n,
     input             wclk,
-    input             sys_clk,
     input             rclk,
     input             r_en,
     input             w_en,
