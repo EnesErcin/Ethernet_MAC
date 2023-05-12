@@ -1,6 +1,9 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1682683554" />
-    <testcase name="transmit" classname="my_tests" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/ASYNC_FIFO/my_tests.py" lineno="22" time="0.011417627334594727" sim_time_ns="278.001" ratio_time="24348.40373162939" />
+    <property name="random_seed" value="1683897730" />
+    <testcase name="my_fifo_test_001" classname="my_fifo_test" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.008313655853271484" sim_time_ns="54.001" ratio_time="6495.457708746773" />
+    <testcase name="my_fifo_test_002" classname="my_fifo_test" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.007089376449584961" sim_time_ns="48.001" ratio_time="6770.835254884815" />
+    <testcase name="my_fifo_test_003" classname="my_fifo_test" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.008844614028930664" sim_time_ns="54.00099999999999" ratio_time="6105.523635442218" />
+    <testcase name="my_fifo_test_004" classname="my_fifo_test" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.006935596466064453" sim_time_ns="48.001000000000005" ratio_time="6920.962059264352" />
   </testsuite>
 </testsuites>

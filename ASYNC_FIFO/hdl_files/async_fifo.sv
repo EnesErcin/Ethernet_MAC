@@ -5,41 +5,42 @@ module async_fifo #(
 )(
     input             arst_n,
     input             wclk,
-
     input             rclk,
     input             r_en,
     input             w_en,
-
+    input [3:0] testmy,
     input [WIDTH-1:0] data_in,
     output [WIDTH-1:0] data_out
 );
 
 
 // Dump waveforms with makefile
-/*
+
 `ifdef COCOTB_SIM
 initial begin
+$dumpfile("sim.vcd");
+$dumpvars(0,async_fifo);
     for (int i =0 ; i<SIZE-1 ;i++ ) begin
         $dumpvars(0,async_bram.data_regs[i]);
     end
 end    
 `endif
-*/
+
 
 logic wr_srstn, rd_srstn;
 
 syncher rd_rst_scnch_m(
     .clk(rclk),
-    .n_asignal(arst_n),
+    .n_as_signal(arst_n),
 
-    .n_ssignal(rd_srstn)
+    .n_s_signal(rd_srstn)
 );
 
 syncher wr_rst_scnch_m(
     .clk(wclk),
-    .n_asignal(arst_n),
+    .n_as_signal(arst_n),
 
-    .n_ssignal(wr_srstn)
+    .n_s_signal(wr_srstn)
 );
 
 logic empt;
