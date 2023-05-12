@@ -8,7 +8,6 @@ module async_fifo #(
     input             rclk,
     input             r_en,
     input             w_en,
-    input [3:0] testmy,
     input [WIDTH-1:0] data_in,
     output [WIDTH-1:0] data_out
 );

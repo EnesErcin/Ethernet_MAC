@@ -20,12 +20,6 @@ class ASYNC_FIFO_TB:
         self.dut = dut
         self.regs = dut.async_bram.data_regs
 
-        # Parameter assigmant
-        #self.SIZE  = SIZE
-        #self.WIDTH = WIDTH
-        #self.dut.SIZE.value = SIZE
-        #self.dut.WIDTH.value = WIDTH
-
         self.dut.arst_n.value =   1
         self.dut.r_en.value   =   0
         self.dut.w_en.value   =   0
@@ -108,36 +102,32 @@ class ASYNC_FIFO_TB:
         await self.buf_data_pul(pull_cnt,payload)
 
 
-    # UNT TESTS
-    async def test_fnc(self):
-        self.dut.testmy.value = 10
-        await(Timer(10,"ns"))
-        self.dut.testmy.value = 11
-        await(Timer(10,"ns"))
-        self.dut.testmy.value = 12
-        await(Timer(10,"ns"))
 
-async def my_fifo_test(dut,push_cnt=4,pull_cnt=3):
+
+async def my_fifo_test(dut,push_cnt=4,pull_cnt=3,*comb):
 
     # Generate test bench class
     tb = ASYNC_FIFO_TB(dut)
     
-    # Start clock and reset system
-    await tb.init_clk()
-    await Timer(10,"ns")
-    await tb.reset()
-    
-    assert (push_cnt >= pull_cnt) # Do not push more than pull
+    try: 
+        print(comb)
+    except:
+        # Start clock and reset system
+        await tb.init_clk()
+        await Timer(10,"ns")
+        await tb.reset()
+        
+        assert (push_cnt >= pull_cnt) # Do not push more than pull
 
-    await tb.data_exc(10,push_cnt,pull_cnt)
-    
+        await tb.data_exc(10,push_cnt,pull_cnt)
+        
 
-    raise cocotb.result.TestSuccess("Reason")
+        raise cocotb.result.TestSuccess("Reason")
 
 
 
 factory = TestFactory(my_fifo_test)
-factory.add_option(("push_cnt"),[3,4])
-factory.add_option(("pull_cnt"),[3,2])
-
+factory.add_option(["push_cnt","pull_cnt"],[[7,4],[8,6]])
 factory.generate_tests()
+
+#comb will be number of push pulls consecutaviley or pareleşş
