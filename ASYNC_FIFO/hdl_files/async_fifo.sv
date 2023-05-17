@@ -87,6 +87,8 @@ async_bram #(
 ) async_bram  (
     .wr_clk(wclk),
     .rd_clk(rclk),
+    .wr_srstn(wr_srstn),
+
     .data_in(data_in),      
     .data_out(data_out),
 

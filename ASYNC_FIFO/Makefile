@@ -23,10 +23,10 @@ VERILOG_SOURCES +=$(PWD)/hdl_files/buf_ready.sv
 COMPILE_ARGS +=-g2005-sv
 
 # MODULE is the basename of the Python test file
-MODULE=my_fifo_test 
+MODULE+=toptest
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
-TOPLEVEL =async_fifo
+TOPLEVEL=async_fifo
 
 SIM=icarus
 WAVES = 1

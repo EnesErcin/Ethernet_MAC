@@ -5,6 +5,7 @@ module async_bram #(
 )(
     input                    wr_clk,
     input                    rd_clk,
+    input                    wr_srstn,
     input        [WIDTH-1:0] data_in,      
     output       [WIDTH-1:0] data_out,
     input        [PTR_LEN:0]  read_ptr,
@@ -23,9 +24,14 @@ assign w_ptr =  wrt_ptr[PTR_LEN-1:0];
 assign r_ptr=  read_ptr[PTR_LEN-1:0];
 
 always_ff @(posedge wr_clk) begin
-    if(wr_en && ~full) begin
+
+  if (!wr_srstn) begin
+    for (int i = 0; i<SIZE ; i = i+1 ) begin
+      data_regs[i] <= 0;
+    end
+  end else if(wr_en && ~full) begin
       data_regs[ w_ptr[PTR_LEN-1:0]] <= data_in;
-    end 
+  end 
 end
 
 assign data_out  =  (rd_en) ? data_regs[r_ptr[PTR_LEN-1:0]]: 0;
