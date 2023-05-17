@@ -7,7 +7,7 @@ from cocotb.queue import Queue
 from cocotest_fnc.test_param_err import test_parameter_check
 
 class ASYNC_FIFO_TB:
-    def __init__(self,dut):
+    def __init__(self,dut,clk_per):
         self.dut = dut
         self.regs = dut.async_bram.data_regs
 
@@ -27,6 +27,8 @@ class ASYNC_FIFO_TB:
 
         self.pull_cnt_acc = 0
         self.push_cnt_acc = 0
+        self.wclk_per = clk_per[0]
+        self.rclk_per = clk_per[1]
 
 
     async def __run(self):
@@ -65,6 +67,9 @@ class ASYNC_FIFO_TB:
         await (RisingEdge(self.dut.rclk))
 
     
+    ###########
+    ### Fill ##
+    ###########
     async def buf_data_fill(self,cnt,strt,payload):
         assert(cnt <= len(payload)) # Payload is smaller then push count
         await RisingEdge(self.dut.wclk)
@@ -86,7 +91,9 @@ class ASYNC_FIFO_TB:
 
         self.dut.w_en.value = 0
 
-
+    ###########
+    ### Pull ##
+    ###########
     async def buf_data_pul(self,cnt,strt,payload):
         await RisingEdge(self.dut.rclk)
         self.dut._log.info("Start --> \t {} || Untill --> \t {} \n".format(strt,strt+cnt))
@@ -102,30 +109,50 @@ class ASYNC_FIFO_TB:
             assert (int(payload[i])== int(self.dut.data_out.value.integer))
 
         self.dut.r_en.value = 0
-
-
-    async def data_exc(self,len,push_cnt,pull_cnt):
+    
+    ##################
+    ### Push - Pull ##
+    ##################
+    async def buf_push_pull(self,cnt,strt,payload):
+        await RisingEdge(self.dut.rclk)
+        await RisingEdge(self.dut.wclk)
         
-        # Save payload will check later
-        payload =[]
-        for i in range (0,len):
-            payload.append(random.randrange(2**8-1))
+        wclk_faster = bool()
+        if self.wclk_per >= self.rclk_per:
+            wclk_faster = True
+        else:
+            wclk_faster = False
 
-        await self.buf_data_fill(push_cnt,payload)
+        for i in range (strt,cnt+strt):
+            self.dut.data_in.value = payload[i]
+            self.dut.r_en.value = 1
+            self.dut.w_en.value = 1
 
-        await self.buf_data_pul(pull_cnt,payload)
+            if wclk_faster:
+                await RisingEdge(self.dut.rclk)
+            else:
+                await RisingEdge(self.dut.wclk)
+            self.dut._log.info("\t |Unload| \t Payload \t \t {} Output \t \t {} \t \t Input {}".format(payload[i],self.dut.data_out.value.integer,self.dut.data_in.value.integer))
+        
+        self.dut.data_in.value = 0
+        self.dut.r_en.value = 0
+        self.dut.w_en.value = 0
 
-
-###########
-### TEST ##
-###########
+################
+### MAIN TEST ##
+################
 async def my_fifo_test(dut,comb=None,order=None,clk_per = [6 , 4],payload_len = None):
-
-    # Generate test bench class
-    tb = ASYNC_FIFO_TB(dut)
 
     # Invalid parameters will raise error
     await test_parameter_check(comb,order)
+    
+    # Generate test bench class
+    tb = ASYNC_FIFO_TB(dut,clk_per)
+    
+    # Start clock and reset system
+    await tb.init_clk(clk_per[0],clk_per[1])
+    await Timer(10,"ns")
+    await tb.reset()
 
     # Stores push counts
     push_cnts = []
@@ -140,12 +167,6 @@ async def my_fifo_test(dut,comb=None,order=None,clk_per = [6 , 4],payload_len = 
             pull_cnts.append(comb[cnt])
         else:
             assert False # Invalid input
-
-
-    # Start clock and reset system
-    await tb.init_clk(clk_per[0],clk_per[1])
-    await Timer(10,"ns")
-    await tb.reset()
 
 
     payload =[]
