@@ -3,7 +3,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge ,RisingEdge, Timer
 import random
 from crc import Calculator, Crc32
-from basic_funcs import rvrs_bits
+from cocotest_fnc.basic_fncs.basic_funcs import rvrs_bits
 
 mycalc = Calculator(Crc32.CRC32)
 

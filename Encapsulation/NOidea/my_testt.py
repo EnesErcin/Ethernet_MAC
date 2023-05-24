@@ -3,7 +3,65 @@ from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge ,RisingEdge, Timer
 import random
 from crc import Calculator, Crc32
-from basic_funcs import rvrs_bits
+from Encapsulation.cocotest_fnc.basic_fncs.basic_funcs import rvrs_bits
+
+
+
+
+
+import cocotb 
+from cocotb.clock import Clock
+from cocotb.triggers import FallingEdge ,RisingEdge, Timer, ClockCycles
+import random
+from cocotest_fnc.encapsulation_testclass import GMII_SNK,GMII_SRC
+from cocotb.queue import Queue
+
+class Ethernet_TB:
+    def __init__(self,dut,clk_per):
+        self.dut = dut
+        self.regs = dut.async_bram.data_regs
+
+        self.dut.arst_n.value =   1
+        self.dut.r_en.value   =   0
+        self.dut.w_en.value   =   0
+
+        self.source = GMII_SRC(dut.SIZE,dut.WIDTH,dut.arst_n,dut.wclk,dut.rclk,dut.r_en,
+                               dut.w_en,dut.data_in,dut.data_out)
+
+        self.sink =  GMII_SNK(dut.SIZE,dut.WIDTH,dut.arst_n,dut.wclk,dut.rclk,dut.r_en,
+                               dut.w_en,dut.data_in,dut.data_out)
+        
+        # Functions are filled in queue
+        self.queue = Queue(100)
+        dut._log.info("Initated the class")
+
+        self.pull_cnt_acc = 0
+        self.push_cnt_acc = 0
+        self.wclk_per = clk_per[0]
+        self.rclk_per = clk_per[1]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 mycalc = Calculator(Crc32.CRC32)
 

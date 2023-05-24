@@ -1,19 +1,19 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1684331250" />
-    <testcase name="my_fifo_test_001" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.007845401763916016" sim_time_ns="60.001" ratio_time="7647.91935525436" />
-    <testcase name="my_fifo_test_002" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.007407665252685547" sim_time_ns="64.001" ratio_time="8639.834255037014" />
-    <testcase name="my_fifo_test_003" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.00010728836059570312" sim_time_ns="0.0010000000000047748" ratio_time="9.32067555560006">
-      <failure message="Test failed with RANDOM_SEED=1684331250" />
+    <property name="random_seed" value="1684913819" />
+    <testcase name="my_fifo_test_001" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.0180361270904541" sim_time_ns="60.001" ratio_time="3326.7119764174013" />
+    <testcase name="my_fifo_test_002" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.005015850067138672" sim_time_ns="64.001" ratio_time="12759.75141667459" />
+    <testcase name="my_fifo_test_003" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="7.200241088867188e-05" sim_time_ns="0.0010000000000047748" ratio_time="13.888423841125917">
+      <failure message="Test failed with RANDOM_SEED=1684913819" />
     </testcase>
-    <testcase name="my_fifo_test_004" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.00010466575622558594" sim_time_ns="0.0010000000000047748" ratio_time="9.554223234669765">
-      <failure message="Test failed with RANDOM_SEED=1684331250" />
+    <testcase name="my_fifo_test_004" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="9.226799011230469e-05" sim_time_ns="0.0010000000000047748" ratio_time="10.837994832093093">
+      <failure message="Test failed with RANDOM_SEED=1684913819" />
     </testcase>
-    <testcase name="my_fifo_test_005" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.015990018844604492" sim_time_ns="156.00099999999998" ratio_time="9756.148602203764" />
-    <testcase name="my_fifo_test_006" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.019646167755126953" sim_time_ns="164.00099999999998" ratio_time="8347.734888764835" />
-    <testcase name="my_fifo_test_007" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.0033516883850097656" sim_time_ns="42.00100000000003" ratio_time="12531.296223075838" />
-    <testcase name="my_fifo_test_008" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.002676248550415039" sim_time_ns="40.00100000000003" ratio_time="14946.668534877517" />
-    <testcase name="my_fifo_test_009" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.004429817199707031" sim_time_ns="48.000999999999976" ratio_time="10835.887314531748" />
-    <testcase name="my_fifo_test_010" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.0038576126098632812" sim_time_ns="44.000999999999976" ratio_time="11406.277521878857" />
+    <testcase name="my_fifo_test_005" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.012740135192871094" sim_time_ns="156.00099999999998" ratio_time="12244.8465136612" />
+    <testcase name="my_fifo_test_006" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.012123823165893555" sim_time_ns="164.00099999999998" ratio_time="13527.168596566436" />
+    <testcase name="my_fifo_test_007" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.002603769302368164" sim_time_ns="42.00100000000003" ratio_time="16130.845371669273" />
+    <testcase name="my_fifo_test_008" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.002460479736328125" sim_time_ns="40.00100000000003" ratio_time="16257.39867286823" />
+    <testcase name="my_fifo_test_009" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.0034477710723876953" sim_time_ns="48.000999999999976" ratio_time="13922.328075790048" />
+    <testcase name="my_fifo_test_010" classname="toptest" file="/home/enes/.local/lib/python3.10/site-packages/cocotb/regression.py" lineno="717" time="0.003123760223388672" sim_time_ns="44.000999999999976" ratio_time="14085.908281483735" />
   </testsuite>
 </testsuites>

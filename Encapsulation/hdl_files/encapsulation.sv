@@ -1,4 +1,4 @@
-`include "utils.vh"
+`include "hdl_files/utils.sv"
 
 module encapsulation 
 #(
@@ -21,6 +21,13 @@ module encapsulation
     input                eth_tx_clk           
 );
 
+// Dump waveforms with makefile
+`ifdef COCOTB_SIM
+initial begin
+    $dumpfile("sim.vcd");
+    $dumpvars(0,encapsulation);
+end    
+`endif
 
 crc32_comb crc_mod(
     .clk(eth_tx_clk),
