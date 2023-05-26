@@ -4,10 +4,12 @@ module gmii_test #(
     parameter [47:0]    source_mac_addr       = 48'h072227acdb65
 )(
     // System Signal
-    input                eth_tx_en,                    
-    input                sys_clk,        
+                        
+    input                sys_clk,     
     input                rst,
+
     input                eth_rst,
+    input                eth_tx_en,   
     input                eth_tx_clk,
     input                data_in,
     input                pct_qued,
@@ -17,6 +19,13 @@ module gmii_test #(
     output ncrc_err,adr_err,len_err,buffer_full
 );
     
+`ifdef COCOTB_SIM
+initial begin
+    $dumpfile("sim.vcd");
+    $dumpvars(0,gmii_test);
+end    
+`endif
+
 
 logic bf_in_pct_txed; // Payload transmitted, dec buf counter
 logic [7:0] GMII_tx_d;

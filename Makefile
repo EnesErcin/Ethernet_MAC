@@ -42,7 +42,7 @@ VERILOG_SOURCES +=$(PWD)/Decapsulation/decapsulation.sv
 COMPILE_ARGS +=-g2005-sv
 
 # MODULE is the basename of the Python test file
-MODULE=my_tests
+MODULE=test
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
 TOPLEVEL=gmii_test
