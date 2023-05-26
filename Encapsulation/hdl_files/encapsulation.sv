@@ -1,6 +1,5 @@
-`include "hdl_files/utils.sv"
-
 module encapsulation 
+import utils::*; 
 #(
     parameter [47:0]    destination_mac_addr  = 48'h023528fbdd66,
     parameter [47:0]    source_mac_addr       = 48'h072227acdb65,
@@ -18,8 +17,13 @@ module encapsulation
     input                eth_tx_en,                    
     input                clk,        
     input                rst,
-    input                eth_tx_clk           
+    input                eth_tx_clk,
+
+    output  [7:0]        GMII_d,
+    output logic GMII_tx_dv,
+    output logic GMII_tx_er
 );
+ 
 
 // Dump waveforms with makefile
 `ifdef COCOTB_SIM
@@ -44,7 +48,7 @@ logic         [7:0]                    data_out;                               /
 wire                                   data_out_en;                            // Data_out enable when not idle
 logic         [15:0]                   byte_count        = 0;                  // Track bytes in each state
 logic         [15:0]                   len_payload       = 0;                  // Keep track of every payloads Byte Length
-logic         [31:0]                   crc_res           = {(`len_crc){1'b1}}; // Initate CRC, update with every processed byte
+logic         [31:0]                   crc_res           = {(utils::len_crc){1'b1}}; // Initate CRC, update with every processed byte
 wire          [7:0]                    crc_data_in;                            // Input wire to CRC.
 wire          [31:0]                   crc_check;                              // Wire to extract CRC results from crc_32 module
 logic                                  updatecrc         = 0;                  // Enable crc calculation to start
@@ -74,25 +78,56 @@ localparam  Permable_val = 8'b101010,
 // Data out should not be transmitted when IDLE
 assign data_out_en = (state_reg != IDLE)? 1'b1:1'b0;
 
+// Assign data to the output
+assign GMII_d = data_out;
+
 always_comb  begin
     case (state_reg)
-        IDLE        : data_out  =  0;
+        IDLE        : begin 
+          data_out  =  0;
+          GMII_tx_dv = 0;
+        end
 
-        PERMABLE    : data_out  =  Permable_val;
+        PERMABLE    : begin
+          data_out  =  Permable_val;
+          GMII_tx_dv = 1;
+        end
                         
-        SDF         : data_out  =  Start_Del_val;
+        SDF         : begin
+         data_out  =  Start_Del_val;
+         GMII_tx_dv = 1;
+        end
 
-        Dest_MAC    : data_out  =  destination_mac_addr[(8*(`len_addr-byte_count)-1)-:8];
+        Dest_MAC    : begin
+          data_out  =  destination_mac_addr[(8*(utils::len_addr-byte_count)-1)-:8];
+          GMII_tx_dv = 1;
+        end
                         
-        Source_Mac  : data_out  =  source_mac_addr[(8*(`len_addr-byte_count)-1)-:8];  
+        Source_Mac  : begin
+          data_out  =  source_mac_addr[(8*(utils::len_addr-byte_count)-1)-:8];            
+          GMII_tx_dv = 1;
+        end
                          
-        LEN         : data_out  =  ff_out_data_in;
+        LEN         : begin 
+          data_out  =  ff_out_data_in;          
+          GMII_tx_dv = 1;
+        end
 
-        PAYLOAD     : data_out  =  ff_out_data_in;
+        PAYLOAD     :begin 
+          data_out  =  ff_out_data_in;           
+          GMII_tx_dv = 1;
+        end
                       
-        EXT         : data_out  =  0;
+        EXT         : begin 
+          data_out  =  0;          
+          GMII_tx_dv = 1;
+        end
                       
-        FCS         : data_out  =  crc_check[(8*(`len_crc-byte_count)-1)-:8];
+        FCS         : begin 
+          data_out  =  crc_check[(8*(utils::len_crc-byte_count)-1)-:8];
+          GMII_tx_dv = 1;
+        end
+        
     endcase
 end
 
@@ -121,7 +156,7 @@ always_ff @(posedge eth_tx_clk) begin
         end 
 
         PERMABLE:  begin
-          if(byte_count < `len_perm-1 ) begin
+          if(byte_count < utils::len_perm-1 ) begin
               byte_count = byte_count + 1;
           end else begin
               state_reg = SDF;
@@ -135,7 +170,7 @@ always_ff @(posedge eth_tx_clk) begin
         end
         
         Dest_MAC:   begin
-          if (byte_count < `len_addr-1) begin
+          if (byte_count < utils::len_addr-1) begin
               byte_count = byte_count + 1;
           end else begin
               byte_count= 0;
@@ -144,7 +179,7 @@ always_ff @(posedge eth_tx_clk) begin
         end
 
         Source_Mac: begin
-          if (byte_count < `len_addr-1) begin
+          if (byte_count < utils::len_addr-1) begin
               byte_count = byte_count + 1;
           end else begin
               byte_count= 0;
@@ -154,8 +189,8 @@ always_ff @(posedge eth_tx_clk) begin
         end
         
         LEN: begin
-            len_payload[(8*(`len_len-byte_count)-1)-:8] <= reflect_byte(ff_out_data_in);
-          if (byte_count < `len_len-1) begin
+            len_payload[(8*(utils::len_len-byte_count)-1)-:8] <= reflect_byte(ff_out_data_in);
+          if (byte_count < utils::len_len-1) begin
               byte_count = byte_count + 1;
           end else begin
               byte_count= 0;
@@ -169,7 +204,7 @@ always_ff @(posedge eth_tx_clk) begin
               state_reg = PAYLOAD;
           end else begin
               byte_count= 0;
-              if (len_payload <= `min_payload_len)
+              if (len_payload <= utils::min_payload_len)
                   state_reg = EXT;
               else
                   state_reg = FCS;
@@ -178,7 +213,7 @@ always_ff @(posedge eth_tx_clk) begin
         end
     
         EXT: begin
-          if (byte_count < `min_payload_len-len_payload-1) begin
+          if (byte_count < utils::min_payload_len-len_payload-1) begin
               byte_count = byte_count + 1;
           end else begin
               state_reg = FCS;
@@ -190,7 +225,7 @@ always_ff @(posedge eth_tx_clk) begin
     
         FCS: begin
           crc_lsb    = 0;
-          if (byte_count < `len_crc-1) begin
+          if (byte_count < utils::len_crc-1) begin
               byte_count = byte_count + 1;
           end else begin
               byte_count= 0;
@@ -214,7 +249,7 @@ always_ff @(posedge eth_tx_clk) begin
     if (rst) begin
         len_payload                     <= 0;
         state_reg                       <=IDLE;
-        crc_res                         <= {(`len_crc){1'b1}};
+        crc_res                         <= {(utils::len_crc){1'b1}};
         data_out                        <= 0;
         byte_count                      <= 0;
         bf_in_pct_txed                  <= 0;

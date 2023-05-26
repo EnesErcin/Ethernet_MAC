@@ -1,5 +1,5 @@
 module crc32_comb 
-import global::*; // Global Ethernet Module Parameters
+ import global::*;
 (
   input                                clk,
   input                                rst,

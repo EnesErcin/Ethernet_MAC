@@ -16,9 +16,9 @@ TOPLEVEL_LANG ?= verilog
 VERILOG_SOURCES +=$(PWD)/../global.svh
 
 ## Ethernet Transmit
+VERILOG_SOURCES +=$(PWD)/hdl_files/utils.sv
 VERILOG_SOURCES +=$(PWD)/hdl_files/encapsulation.sv
 VERILOG_SOURCES +=$(PWD)/hdl_files/transmit.sv
-VERILOG_SOURCES +=$(PWD)/hdl_files/utils.sv
 
 # CRC 32 Module
 VERILOG_SOURCES +=$(PWD)/../crc32_comb.sv

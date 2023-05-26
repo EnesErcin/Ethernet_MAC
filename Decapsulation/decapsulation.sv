@@ -1,5 +1,4 @@
-`include "utils.vh"
-
+`include "Decapsulation/utils.sv"
 module ethernet_decapsulation 
 #(
     parameter [47:0] destination_mac_addr  = 48'h023528fbdd66,
@@ -38,7 +37,7 @@ end
 
     reg updatecrc_reg = 0;
     reg rst_crc_reg   = 1;
-
+    wire wrong_addr = 0; 
     
     //  Ethernet Frame Encapsulation Stages
     localparam  IDLE                = 4'd0,
@@ -56,12 +55,15 @@ end
                Start_Del_val= 8'b101011;                                            // IEEE defined Permable and Delimeter bytes
 
 
-    crc32_comb crc_mod(
-        .clk(clk),.rst(rst_crc),
-        .updatecrc(updatecrc),
-        .data(gmii_data_in),
-        .result(crc_check)
-    );
+crc32_comb crc_mod(
+    .clk(eth_tx_clk),
+    .rst(rst_crc),
+    .crc_lsb(crc_lsb),
+    .updatecrc(updatecrc),
+    .data(crc_data_in),
+    .result(crc_check)
+);
+
 
     assign data_out_en = (state_reg == IDLE)? 1'b1:1'b0;
     // Bufferred Data should not be transmitted while still receiving
@@ -69,6 +71,10 @@ end
 
     assign updatecrc = updatecrc_reg;
     assign rst_crc   = rst_crc_reg;
+
+    // If the address is not correct stop reciving
+    assign  wrong_addr = ( (state_reg == Source_Mac) && (dest_addr !=  destination_mac_addr) )? 1'b1: 1'b0;
+
 
     // Ethernet Frame Stages
     always @(posedge clk) begin
@@ -113,15 +119,22 @@ end
                                         end
                                     end
                         Source_Mac: begin
-                                        source_addr[(8*(`len_addr-byte_count)-1)-:8]       =    gmii_data_in ;
-                                        if (byte_count < `len_addr-1) begin
-                                            byte_count = byte_count + 1;
-                                        end 
-                                        else begin
-                                            byte_count= 0;
-                                            state_reg = LEN;
-                                        end  
+                                        if (!wrong_addr) begin
+                                            source_addr[(8*(`len_addr-byte_count)-1)-:8]       =    gmii_data_in ;
+                                            if (byte_count < `len_addr-1) begin
+                                                byte_count = byte_count + 1;
+                                            end 
+                                            else begin
+                                                byte_count= 0;
+                                                state_reg = LEN;
+                                            end  
+                                        end else begin 
+                                            state_reg = IDLE;
+                                            byte_count  = 0;
+                                        end
+
                                     end
+
                         LEN:        begin
                                         len_payload[(8*(`len_len-byte_count)-1)-:8]       =    gmii_data_in ;
                                         if (byte_count < `len_len-1) begin

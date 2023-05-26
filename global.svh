@@ -1,5 +1,3 @@
-
-
 package global;
   parameter initial_value = 1;
   parameter crc_len = 32;
