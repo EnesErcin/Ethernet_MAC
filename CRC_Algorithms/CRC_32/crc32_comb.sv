@@ -11,12 +11,14 @@ import global::*; // Global Ethernet Module Parameters
   output  [global::crc_len-1:0]   result
 );
 
+/*
 `ifdef COCOTB_SIM
 initial begin
     $dumpfile("sim.vcd");
     $dumpvars(0,crc32_comb);
 end    
 `endif
+*/
 
 localparam crc_len = global::crc_len,
            datalen = global::datalen;

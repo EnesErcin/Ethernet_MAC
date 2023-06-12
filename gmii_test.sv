@@ -11,14 +11,15 @@ module gmii_test #(
     input                eth_rst,
     input                eth_tx_en,   
     input                eth_tx_clk,
-    input                data_in,
+    input                eth_rx_clk,
+    input   [7:0]        data_in,
     input                pct_qued,
     input   [7:0]        ff_out_data_in , 
     input   [1:0]       bf_out_buffer_ready,
     output        logic  bf_in_r_en,                    // Buffer is ready to be read
     output ncrc_err,adr_err,len_err,buffer_full
 );
-    
+
 `ifdef COCOTB_SIM
 initial begin
     $dumpfile("sim.vcd");
@@ -32,14 +33,15 @@ logic [7:0] GMII_tx_d;
 logic GMII_tx_dv;
 logic GMII_tx_er;
 
+// Ethernet TX w async fifo buffer
 transmit transmit (
     // System Signal
-    .eth_tx_en(),         
-    .eth_tx_clk(),        
-    .eth_rst(),
-    .data_in(),
-
-    .pct_qued()
+    .eth_tx_en(eth_tx_en),         
+    .eth_tx_clk(eth_rx_clk),        
+    .eth_rst(rst),
+    .data_in(data_in),
+    .sys_clk(sys_clk),
+    .pct_qued(pct_qued)
 );
 
 
@@ -60,7 +62,7 @@ ethernet_decapsulation #(
     .gmii_dv(GMII_tx_dv),
     .gmii_er(GMII_tx_er),
     .gmii_en(1'b1),
-    .clk(),
+    .clk(eth_rx_clk),
     .rst()
 );
 

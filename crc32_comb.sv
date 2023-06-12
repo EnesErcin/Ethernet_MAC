@@ -10,13 +10,15 @@ module crc32_comb
   input        [global::datalen-1:0]   data,
   output  wire [global::crc_len-1:0]   result
 );
-
+/*
 `ifdef COCOTB_SIM
 initial begin
     $dumpfile("sim.vcd");
     $dumpvars(0,crc32_comb);
 end    
 `endif
+*/
+
 
 localparam crc_len = global::crc_len,
            datalen = global::datalen;

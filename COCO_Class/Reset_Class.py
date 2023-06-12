@@ -1,5 +1,7 @@
 import cocotb
 from cocotb.triggers import RisingEdge, FallingEdge
+import logging
+
 
 class Reset:
     def _init_reset(self,reset_signal =None,active_reset=True):
@@ -11,8 +13,11 @@ class Reset:
         self.ext_reset = False
         self.rst_state = True
 
-        if active_reset is not None:
+        if reset_signal is not None:
             cocotb.start_soon(self._run_reset(reset_signal,bool(active_reset)))
+        else:
+            #print("Rest signal var --> \t",reset_signal)
+            assert False ## Why update ? 
 
         self._update_Reset()
     
@@ -23,17 +28,17 @@ class Reset:
             self.assert_reset(False)
         else:
             self._local_reset = bool(val)
-            self._update_reset()
+            self._update_Reset()
     ## !!
 
     def _update_Reset(self):
-        new_rst_state = self.ext_reset or self.local_reset
+        new_rst_state =  self.local_reset or self.ext_reset
 
         if  new_rst_state != self.rst_state:
             self.rst_state = new_rst_state
-            self.__handle__reset(new_rst_state)
+            self._handle_reset(new_rst_state)
 
-    def __handle__reset(self,state):
+    def _handle_reset(self, state):
         pass
     
     async def _run_reset(self,reset_signal,active_level):

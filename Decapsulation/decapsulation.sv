@@ -14,12 +14,15 @@ module ethernet_decapsulation
 );
 
 // Dump waveforms with makefile
+
+/*
 `ifdef COCOTB_SIM
 initial begin
     $dumpfile("sim.vcd");
     $dumpvars(0,ethernet_decapsulation);
 end    
 `endif
+*/
 
     //  Define Registers
     reg         [3:0]                   state_reg = 0;                               // FSM State register, keep track of frame section 

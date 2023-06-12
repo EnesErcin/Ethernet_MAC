@@ -17,14 +17,12 @@ module async_fifo #(
 
 `ifdef COCOTB_SIM
 initial begin
-$dumpfile("sim.vcd");
-$dumpvars(0,async_fifo);
-    for (int i =0 ; i<SIZE-1 ;i++ ) begin
+    for (int i =0 ; i<8 ;i++ ) begin
         $dumpvars(0,async_bram.data_regs[i]);
     end
 end    
 `endif
-
+//
 
 logic wr_srstn, rd_srstn;
 
