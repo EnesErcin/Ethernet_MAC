@@ -20,9 +20,6 @@ class GMII_SRC(Reset):
         self.active_event = Event()
         # **Set** during interpacket gap or no transmission
         self.idle_event = Event()
-        # **Set** active to start transmssion during transmission
-        # When Queue is filled with frame + and previous transmission has been finished or flushed
-        self.unhold_queue = Event()
 
         self.dequeue_event = Event()
 
@@ -35,6 +32,7 @@ class GMII_SRC(Reset):
         self.queue_occupancy_bytes = 0
         self.queue_occupancy_frames= 0 
         self.curr_frame = None
+        self.ifg = 12
 
         ### Test becnh params
         self.queue_occupancy_limit_bytes = 1500
@@ -49,7 +47,7 @@ class GMII_SRC(Reset):
 
         self.reset_sig = interface_bus[4]
         self.clk = interface_bus[1]
-        self._run_cr = None
+        self._run_coro = None
         self.data_in = interface_bus[-2] ### Careful dangerous assigment will cause bugs in future
         self.pct_qued =interface_bus[-1]
 
@@ -57,14 +55,14 @@ class GMII_SRC(Reset):
     
     #### Reset the simulation for next attempt
     def _handle_reset(self,rst_State):
-        print("Overwritten Inft While Loop")
 
         if rst_State:
+            self.log_ref.info("Reset asserted ..")
             # Reset Asserted
             # Stop the processes
-            if self._run_cr is not None:
-                self._run_cr.kill()
-                self._run_cr = None
+            if self._run_coro is not None:
+                self._run_coro.kill()
+                self._run_coro = None
             
             self.active = False
 
@@ -73,8 +71,9 @@ class GMII_SRC(Reset):
                 self.active_event.clear()
                 
         else:   
+            self.log_ref.info("Reset deasserted ..")
             # Reset de-asserted
-            self._run_cr = cocotb.start_soon(self._run())
+            self._run_coro = cocotb.start_soon(self._run())
     
     async def send(self,frame):
         while self.full():
@@ -107,51 +106,74 @@ class GMII_SRC(Reset):
         frame_data = None
         f_offset = 0
         self.active = False
-        inter_frame_gap_cnt = 0
+        inter_frame_gap_cnt = 0 # After tx ses has finished adjust it to ifg
 
         clk_edge = RisingEdge(self.clk)
         enable_event = None
+        ifg_waited = True
         
         while True:
-            await clk_edge
-            self.pct_qued.value = 0
-            ## Reciving Process
 
-            if inter_frame_gap_cnt >0:
-                inter_frame_gap_cnt -= 1
-            
-            elif frame is None and not self.queue.empty():
-                frame =  GMII_FRAME(self.queue.get_nowait())
-                self.dequeue_event.set()
-                self.queue_occupancy_bytes -= len(frame.data)
-                self.queue_occupancy_frames -= 1 
-                self.curr_frame = frame
-                # Log the frame here
+              #### States for _run()   ####
 
-                frame_data = frame.data
+                ## Wait one clock cycle ##
+            # State 1: Frame is already loaded not started, prev ifg is not finished
+            # State 2: Frame is already loaded not started, prev ifg finished, also new frame not yet finished
+            # State 3: Frame is already loaded and just finished 
 
-            if frame is not None:
+                ## Wait long enough, not -- one clock cycle ##
+            # State 4: Frame is not loaded, and availbe 
+            # State 5: Frame is not loaded, and not availble
+
+            if ifg_waited:
                 
-                d = frame_data[f_offset]
-                # Save the simulation time here (@ the strat of transmittion)
-                self.log_ref.info("Look at the data \t {}".format(f_offset))
-                self.data_in.value  =  d
+                if ( frame is None and not self.queue.empty() ):
+                    ### State 4 ###
+                    frame =  GMII_FRAME(self.queue.get_nowait())
+                    ifg_waited = not ifg_waited # New frames ifg flag is set to Flalse 
+                    self.dequeue_event.set()
+                    self.queue_occupancy_bytes -= len(frame.data)
+                    self.queue_occupancy_frames -= 1 
+                    self.curr_frame = frame
+                    ### Log the frame here
 
-
-                f_offset += 1 
-
-                if f_offset >= len(frame_data):
-                    self.log_ref.info("How its possible")
-                    self.pct_qued.value = 1
-                    # Save the simulation time here (@ the end of transmittion)
-                    frame = None
-            
-            else:
-                if inter_frame_gap_cnt == 0 and self.queue.empty():
-                    self.log_ref.info("How its possible 2")
+                    frame_data = frame.data
+                
+                elif ( frame is None and self.queue.empty() ):
+                    ### State 5 ###
                     self.idle_event.set()
                     self.active_event.clear()
                     await self.active_event.wait()
+
+            else:
+
+                await clk_edge
+
+                self.pct_qued.value = 0 # ABOUT HARDWARE <ASYNC_FİFO> needs this signal only @ the end of frame !
+            
+                if inter_frame_gap_cnt >0:
+                    ### State 1 ###
+                    inter_frame_gap_cnt -= 1
+
+
+                elif frame is not None:
+                    ### State 2 ###
+                    d = frame_data[f_offset]
+                    # Save the simulation time here (@ the strat of transmittion)
+                    self.log_ref.info("Look at the data \t {}".format(f_offset))
+                    self.data_in.value  =  d
+                    f_offset += 1 
+
+                    if f_offset >= len(frame_data):
+                        self.pct_qued.value = 1
+                        # Save the simulation time here (@ the end of transmittion)
+                        frame = None
+                        inter_frame_gap_cnt = self.ifg
+                        f_offset = 0
+
+                else:
+                    ### State 3 ##
+                    ifg_waited = not ifg_waited
 
 
 

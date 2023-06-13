@@ -62,4 +62,4 @@ async def my_test(dut):
     print("Messeage -> ",message)
     await my_tb.sink.send(message)
 
-    await Timer(50,"ns")
+    await Timer(60,"ns")

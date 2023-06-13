@@ -21,16 +21,6 @@ class Reset:
 
         self._update_Reset()
     
-    ## !!
-    def assert_reset(self, val=None):
-        if val is None:
-            self.assert_reset(True)
-            self.assert_reset(False)
-        else:
-            self._local_reset = bool(val)
-            self._update_Reset()
-    ## !!
-
     def _update_Reset(self):
         new_rst_state =  self.local_reset or self.ext_reset
 
@@ -43,8 +33,10 @@ class Reset:
     
     async def _run_reset(self,reset_signal,active_level):
         while True:
-            if (bool(reset_signal)):
+            print("HEY : {} ".format(bool(reset_signal.value)))
+            if (bool(reset_signal.value)):
                 await FallingEdge(reset_signal)
+                self.ext_reset = not active_level
                 self._update_Reset()
             else:
                 await RisingEdge(reset_signal)
