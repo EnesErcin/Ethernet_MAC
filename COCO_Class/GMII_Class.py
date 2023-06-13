@@ -109,7 +109,6 @@ class GMII_SRC(Reset):
         inter_frame_gap_cnt = 0 # After tx ses has finished adjust it to ifg
 
         clk_edge = RisingEdge(self.clk)
-        enable_event = None
         ifg_waited = True
         
         while True:
@@ -177,10 +176,18 @@ class GMII_SRC(Reset):
 
 
 
+
+
+
+
+
+
+
+
+
 class GMII_SNK(Reset):
     # Recive Through
     
-
     def __init__(self,interface_bus,reset_active = True):
         super().__init__()
         # Store the frames into queue

@@ -63,3 +63,15 @@ async def my_test(dut):
     await my_tb.sink.send(message)
 
     await Timer(60,"ns")
+
+    await my_tb.sink.send(message)
+    print("Messeage -> ",message)
+    await my_tb.sink.send(message)
+    print("Messeage -> ",message)
+    await Timer(90,"ns")
+    my_tb.glb_rst.value = 1
+    await Timer(90,"ns")
+    my_tb.glb_rst.value = 0
+    await Timer(90,"ns")
+    await my_tb.sink.send(message)
+    print("Messeage -> ",message)

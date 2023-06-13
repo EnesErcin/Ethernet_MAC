@@ -1,0 +1,410 @@
+$date
+	Tue Jun 13 16:31:44 2023
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module async_fifo $end
+$scope module async_bram $end
+$var reg 8 ! \data_regs[0] [7:0] $end
+$upscope $end
+$upscope $end
+$scope module async_fifo $end
+$scope module async_bram $end
+$var reg 8 " \data_regs[1] [7:0] $end
+$upscope $end
+$upscope $end
+$scope module async_fifo $end
+$scope module async_bram $end
+$var reg 8 # \data_regs[2] [7:0] $end
+$upscope $end
+$upscope $end
+$scope module async_fifo $end
+$scope module async_bram $end
+$var reg 8 $ \data_regs[3] [7:0] $end
+$upscope $end
+$upscope $end
+$scope module async_fifo $end
+$scope module async_bram $end
+$var reg 8 % \data_regs[4] [7:0] $end
+$upscope $end
+$upscope $end
+$scope module async_fifo $end
+$scope module async_bram $end
+$var reg 8 & \data_regs[5] [7:0] $end
+$upscope $end
+$upscope $end
+$scope module async_fifo $end
+$scope module async_bram $end
+$var reg 8 ' \data_regs[6] [7:0] $end
+$upscope $end
+$upscope $end
+$scope module async_fifo $end
+$scope module async_bram $end
+$var reg 8 ( \data_regs[7] [7:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+bx (
+bx '
+bx &
+bx %
+bx $
+bx #
+bx "
+bx !
+$end
+#12000
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#16000
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#20000
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#24000
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#36000
+b1010101 !
+#40000
+b11011101 "
+#44000
+b11011001 #
+#72001
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#78001
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#84001
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#90001
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#102001
+b10100010 !
+#108001
+b1101100 "
+#114001
+b10001110 #
+#136004
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#140004
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#144004
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#148004
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#160004
+b11011101 !
+#164004
+b11 "
+#168004
+b111000 #
+#172004
+b110010 $
+#176004
+b100001 %
+#180004
+b11011 &
+#184004
+b1111010 '
+#220004
+b11110000 (
+#224004
+b1101100 !
+#228004
+b101000 "
+#232004
+b10 #
+#236004
+b11101010 $
+#292005
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#298005
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#304005
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#310005
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#322005
+b1001001 !
+#328005
+b11111 "
+#334005
+b11011 #
+#340005
+b10111011 $
+#346005
+b100010 %
+#352005
+b10110 &
+#358005
+b1110101 '
+#388005
+b11011111 (
+#394005
+b101011 !
+#400005
+b10000000 "
+#406005
+b1111111 #
+#412005
+b10110001 $
+#456006
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#460006
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#464006
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#468006
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#498007
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#504007
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#510007
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#516007
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#538008
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#542008
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#546008
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#550008
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#586009
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#592009
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#598009
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#604009
+b0 (
+b0 '
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+#618010
