@@ -6,7 +6,7 @@ from cocotb.triggers import RisingEdge, FallingEdge,Timer
 from COCO_Class.Reset_Class import Reset
 from COCO_Class.GMII_Class import GMII_SNK, GMII_SRC
 from log_handle import log_handle
-
+from messeage_gen import gen_frame
 
 class TB():
     def __init__(self, dut):
@@ -17,7 +17,7 @@ class TB():
             "BUFFER":dut.transmit.async_fifo
         }
 
-        self.logger = self.config_log()
+        self.logger = self.config_log("Debug")
 
         self.sys_clk = dut.sys_clk
         self.eth_tx_clk = dut.eth_tx_clk
@@ -50,38 +50,38 @@ class TB():
         self.glb_rst.value = 0
         await Timer(10,"ns")
 
-    def config_log(self):
-        return log_handle()
+    def config_log(self,id):
+        return log_handle(id)
 
-    async def _log(self):
-        self.logger.info("MY Initiated the log file")
+    async def _log(self,str):
+        self.logger.info(str)
 
+    async def _generate_frame(self,num):
+        payload,crc = gen_frame(num)
+        return payload,crc
 
-message = ["1","2","3","4","5","6","7","8","9"]
-for i in range(0,len(message)):
-    message[i] = ord(message[i])
-message = bytes(message)
 
 @cocotb.test()
 async def my_test(dut):
     my_tb = TB(dut)
     # Create logger, set level, and add stream handler
     
-    # await my_tb._log() <<<-- Using the log
+    await my_tb._log("Instentiate the log") # <<<-- Using the log
+
+    my_frame,my_crc = await my_tb._generate_frame(23)
 
     await my_tb.reset()
-    print("Messeage -> ",message)
-    await my_tb.sink.send(message)
+    print("Messeage -> ",my_frame)
+    await my_tb.sink.send(my_frame)
     await Timer(60,"ns")
 
-    await my_tb.sink.send(message)
-    print("Messeage -> ",message)
-    await my_tb.sink.send(message)
-    print("Messeage -> ",message)
     await Timer(90,"ns")
     my_tb.glb_rst.value = 1
     await Timer(90,"ns")
     my_tb.glb_rst.value = 0
     await Timer(90,"ns")
-    await my_tb.sink.send(message)
-    print("Messeage -> ",message)
+
+    my_frame,my_crc = await my_tb._generate_frame(17)
+    await my_tb.sink.send(my_frame)
+    await Timer(90,"ns")
+    print("Messeage -> ",my_frame)

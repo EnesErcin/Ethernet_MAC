@@ -1,6 +1,5 @@
 import cocotb
 from cocotb.triggers import RisingEdge, FallingEdge
-import logging
 
 
 class Reset:

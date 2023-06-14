@@ -82,6 +82,7 @@ class GMII_SRC(Reset):
             self.dequeue_event.clear() 
             await self.dequeue_event.wait()
         new_frame = frame
+        self.log_ref.info("**** \t Look at the length\t {}".format(len(new_frame)))
 
         ## Fill the queue with new frame
         ## await the courutines until the frame is iserted
@@ -159,7 +160,7 @@ class GMII_SRC(Reset):
                     ### State 2 ###
                     d = frame_data[f_offset]
                     # Save the simulation time here (@ the strat of transmittion)
-                    self.log_ref.info("Look at the data \t {}".format(f_offset))
+                    self.log_ref.info("Look at the data \t {}".format(d))
                     self.data_in.value  =  d
                     f_offset += 1 
 
