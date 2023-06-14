@@ -5,6 +5,8 @@ from cocotb.triggers import RisingEdge, FallingEdge,Timer
 
 from COCO_Class.Reset_Class import Reset
 from COCO_Class.GMII_Class import GMII_SNK, GMII_SRC
+from log_handle import log_handle
+
 
 class TB():
     def __init__(self, dut):
@@ -13,10 +15,11 @@ class TB():
             "TX" : dut.transmit,
             "RX": dut.decapsulation,
             "BUFFER":dut.transmit.async_fifo
-        } 
+        }
+
+        self.logger = self.config_log()
 
         self.sys_clk = dut.sys_clk
-
         self.eth_tx_clk = dut.eth_tx_clk
         self.eth_rx_clk = dut.eth_rx_clk
         self.glb_rst = dut.rst
@@ -47,6 +50,12 @@ class TB():
         self.glb_rst.value = 0
         await Timer(10,"ns")
 
+    def config_log(self):
+        return log_handle()
+
+    async def _log(self):
+        self.logger.info("MY Initiated the log file")
+
 
 message = ["1","2","3","4","5","6","7","8","9"]
 for i in range(0,len(message)):
@@ -56,12 +65,13 @@ message = bytes(message)
 @cocotb.test()
 async def my_test(dut):
     my_tb = TB(dut)
-
+    # Create logger, set level, and add stream handler
+    
+    # await my_tb._log() <<<-- Using the log
 
     await my_tb.reset()
     print("Messeage -> ",message)
     await my_tb.sink.send(message)
-
     await Timer(60,"ns")
 
     await my_tb.sink.send(message)
