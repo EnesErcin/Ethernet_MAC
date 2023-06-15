@@ -12,6 +12,7 @@ input            eth_tx_clk,          // Ethernet transmit clock
 input            eth_tx_en,           // Ethernet transmit enable
 input            eth_rst,             // Ethernet module reset
 
+
 // Buffer_ready control
 input [WIDTH-1:0] data_in,
 input pct_qued,
@@ -36,7 +37,6 @@ end
 
 logic [WIDTH-1:0] buf_data_out;   // Data wire            Fifo --> Ethernet
 logic [1:0] bf_out_buffer_ready;  // Payload counter for  Ethernet <--> Buf_Ready <-- Fifo
-logic bf_in_r_en;                 // Buffer read          Ethernet --> Fifo
 
 encapsulation #(
     .destination_mac_addr(destination_mac_addr),

@@ -72,14 +72,16 @@ async def my_test(dut):
     
     await my_tb._log("Instentiate the log") # <<<-- Using the log
 
-    my_frame,my_crc = await my_tb._generate_frame(23)
+    my_frame,my_crc = await my_tb._generate_frame(60)
+
+    my_tb.logger_vals.info("CRC value supposed to be: {}".format(my_crc))
 
     await my_tb.reset()
     print("Messeage -> ",my_frame)
     await my_tb.sink.send(my_frame)
     my_frame,my_crc = await my_tb._generate_frame(17)
     await my_tb.sink.send(my_frame)
-    await Timer(60,"ns")
+    await Timer(800,"ns")
 
     await Timer(90,"ns")
     my_tb.glb_rst.value = 1

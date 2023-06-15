@@ -55,11 +55,13 @@ class GMII_SRC(Reset):
         self.pct_qued =interface_bus[-1]
 
         self.pct_qued = dut.pct_qued
+        self.w_en_sig = dut.buf_w_en
 
         self._init_reset(self.reset_sig,reset_active)
 
     async def kill_co(self):
         self.pct_qued.value = 0
+        self.w_en_sig.value = 0
         self._run_coro.kill()
     
     #### Reset the simulation for next attempt
@@ -157,14 +159,14 @@ class GMII_SRC(Reset):
             # State 2: Frame is already loaded not started, prev ifg finished, also new frame not yet finished
             # State 3: Frame is already loaded and just finished 
 
-                ## Wait long enough, not -- one clock cycle ##
             # State 4: Frame is not loaded, and availbe 
             # State 5: Frame is not loaded, and not availble
 
             ####################################################
 
             pct_qued.value = 0 # ABOUT HARDWARE <ASYNC_FİFO> needs this signal only @ the end of frame !
-            
+            w_en_sig.value = 0
+
             if ifg_waited:                
                 if ( frame is None and not self.queue.empty() ):
                     ### State 4 ###
@@ -207,6 +209,7 @@ class GMII_SRC(Reset):
                         # Save the simulation time here (@ the end of transmittion)
                         frame = None
                         inter_frame_gap_cnt = self.ifg
+                        self.dut.eth_tx_en = 1
                     else:
                         pass
                         

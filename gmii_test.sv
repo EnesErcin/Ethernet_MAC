@@ -15,9 +15,9 @@ module gmii_test #(
     input   [7:0]        data_in,
     input                buf_w_en,
     input                pct_qued,
+    output logic         bf_in_r_en,
     input   [7:0]        ff_out_data_in , 
     input   [1:0]       bf_out_buffer_ready,
-    output        logic  bf_in_r_en,                    // Buffer is ready to be read
     output ncrc_err,adr_err,len_err,buffer_full
 );
 
@@ -46,14 +46,12 @@ transmit transmit (
 
     // Async Fifo Signals
     .buf_w_en(buf_w_en)
-
 );
 
 
 ethernet_decapsulation #(
     .destination_mac_addr(destination_mac_addr),
-    .source_mac_addr(source_mac_addr),
-    .GMII(1)
+    .source_mac_addr(source_mac_addr)
 ) decapsulation (
     // Output Payload
     .ncrc_err(),
