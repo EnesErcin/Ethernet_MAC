@@ -14,7 +14,8 @@ input            eth_rst,             // Ethernet module reset
 
 // Buffer_ready control
 input [WIDTH-1:0] data_in,
-input pct_qued
+input pct_qued,
+input buf_w_en
 );
 
 // Mac addresses parameters are saved as big endian 
@@ -77,7 +78,7 @@ async_fifo  #(
    
    // External Signals
     .r_en(bf_in_r_en),
-    .w_en(w_en),
+    .w_en(buf_w_en),
     .data_in(data_in),
 
     // Buffer signals
@@ -87,9 +88,9 @@ async_fifo  #(
 
 buf_ready buf_ready (
     // Buffer_ready control signals
-    .bf_in_pct_qued(bf_in_pct_qued),
+    .bf_in_pct_qued(pct_qued),
     .bf_in_pct_txed(bf_in_pct_txed),
-    .eth_tx_clk(eth_tx_clk),
+    .eth_tx_clk(sys_clk),
     .bf_out_buffer_ready(bf_out_buffer_ready),
     .rst(eth_rst)
 );

@@ -1,4 +1,5 @@
 import cocotb
+import cocotb.utils
 from cocotb.triggers import RisingEdge, FallingEdge
 from cocotb.queue import Queue
 from cocotb.clock import Clock
@@ -10,7 +11,7 @@ from COCO_Class.Frame_Class import GMII_FRAME
 
 class GMII_SRC(Reset):
     # Transmission through
-    def __init__(self,interface_bus,log_ref,reset_active = True, reset= None, *args, **kwargs):
+    def __init__(self,dut,interface_bus,log_ref,reset_active = True, reset= None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Fill with payload
@@ -44,6 +45,8 @@ class GMII_SRC(Reset):
         #######################
         ### HARDWARE SIGNALS ##
         #######################
+        self.intrface_bus = interface_bus
+        self.dut = dut
 
         self.reset_sig = interface_bus[4]
         self.clk = interface_bus[1]
@@ -51,7 +54,13 @@ class GMII_SRC(Reset):
         self.data_in = interface_bus[-2] ### Careful dangerous assigment will cause bugs in future
         self.pct_qued =interface_bus[-1]
 
+        self.pct_qued = dut.pct_qued
+
         self._init_reset(self.reset_sig,reset_active)
+
+    async def kill_co(self):
+        self.pct_qued.value = 0
+        self._run_coro.kill()
     
     #### Reset the simulation for next attempt
     def _handle_reset(self,rst_State):
@@ -61,7 +70,7 @@ class GMII_SRC(Reset):
             # Reset Asserted
             # Stop the processes
             if self._run_coro is not None:
-                self._run_coro.kill()
+                self.kill_co()
                 self._run_coro = None
             
             self.active = False
@@ -109,10 +118,37 @@ class GMII_SRC(Reset):
         self.active = False
         inter_frame_gap_cnt = 0 # After tx ses has finished adjust it to ifg
 
-        clk_edge = RisingEdge(self.clk)
+        ## Select the rigth clock
+        async_wclk_sig = self.dut.transmit.async_fifo.wclk 
+        ## Same as sys clock but can be changed this would ensure to pick the rigth clock
+        
+        w_en_sig = self.dut.buf_w_en
+        pct_qued = self.dut.pct_qued
+
+        clk_edge = RisingEdge(async_wclk_sig)
+
         ifg_waited = True
         
         while True:
+            await clk_edge
+            
+            ##################
+            #### Process #####
+            ##################
+            ################################################
+
+            ### * Goal: Send the data byte by byte to async fifo ###
+
+            ### * To write on async fifo wait for << asyncfifo.wclk >> rising edge ###
+
+            ### * In order to differantiate different frames add two byte information...
+            ### ... which indicates the length of the frame.   ###
+
+            ### * At the end of the frame packet asserte pckt_qued signal for one ...
+            ### ... << asyncfifo.wclk >> cycle ###
+
+
+            #################################################
 
               #### States for _run()   ####
 
@@ -125,8 +161,11 @@ class GMII_SRC(Reset):
             # State 4: Frame is not loaded, and availbe 
             # State 5: Frame is not loaded, and not availble
 
-            if ifg_waited:
-                
+            ####################################################
+
+            pct_qued.value = 0 # ABOUT HARDWARE <ASYNC_FİFO> needs this signal only @ the end of frame !
+            
+            if ifg_waited:                
                 if ( frame is None and not self.queue.empty() ):
                     ### State 4 ###
                     frame =  GMII_FRAME(self.queue.get_nowait())
@@ -146,38 +185,39 @@ class GMII_SRC(Reset):
                     await self.active_event.wait()
 
             else:
+                # self.pct_qued.value = 0 # ABOUT HARDWARE <ASYNC_FİFO> needs this signal only @ the end of frame !
 
-                await clk_edge
-
-                self.pct_qued.value = 0 # ABOUT HARDWARE <ASYNC_FİFO> needs this signal only @ the end of frame !
-            
                 if inter_frame_gap_cnt >0:
                     ### State 1 ###
                     inter_frame_gap_cnt -= 1
 
-
                 elif frame is not None:
                     ### State 2 ###
+                    w_en_sig.value = 1
                     d = frame_data[f_offset]
                     # Save the simulation time here (@ the strat of transmittion)
-                    self.log_ref.info("Look at the data \t {}".format(d))
                     self.data_in.value  =  d
                     f_offset += 1 
+                    
 
                     if f_offset >= len(frame_data):
-                        self.pct_qued.value = 1
+                        f_offset = 0
+                        ifg_waited = False
+                        pct_qued.value = 1
                         # Save the simulation time here (@ the end of transmittion)
                         frame = None
                         inter_frame_gap_cnt = self.ifg
-                        f_offset = 0
+                    else:
+                        pass
+                        
+                        
+                
+                elif inter_frame_gap_cnt == 0:
+                    ifg_waited = True
 
                 else:
+                    pass
                     ### State 3 ##
-                    ifg_waited = not ifg_waited
-
-
-
-
 
 
 
@@ -189,7 +229,7 @@ class GMII_SRC(Reset):
 class GMII_SNK(Reset):
     # Recive Through
     
-    def __init__(self,interface_bus,reset_active = True):
+    def __init__(self,dut,interface_bus,reset_active = True):
         super().__init__()
         # Store the frames into queue
         self.queue = Queue()

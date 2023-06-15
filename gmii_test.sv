@@ -13,6 +13,7 @@ module gmii_test #(
     input                eth_tx_clk,
     input                eth_rx_clk,
     input   [7:0]        data_in,
+    input                buf_w_en,
     input                pct_qued,
     input   [7:0]        ff_out_data_in , 
     input   [1:0]       bf_out_buffer_ready,
@@ -41,7 +42,11 @@ transmit transmit (
     .eth_rst(rst),
     .data_in(data_in),
     .sys_clk(sys_clk),
-    .pct_qued(pct_qued)
+    .pct_qued(pct_qued),
+
+    // Async Fifo Signals
+    .buf_w_en(buf_w_en)
+
 );
 
 

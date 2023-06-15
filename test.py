@@ -18,6 +18,7 @@ class TB():
         }
 
         self.logger = self.config_log("Debug")
+        self.logger_vals = self.config_log("Vals")
 
         self.sys_clk = dut.sys_clk
         self.eth_tx_clk = dut.eth_tx_clk
@@ -36,8 +37,8 @@ class TB():
         tx_bus = [dut.eth_tx_en,dut.eth_tx_clk,dut.eth_rst,dut.data_in,dut.pct_qued]
         rx_bus = [dut.ncrc_err,dut.adr_err,dut.len_err,dut.buffer_full,dut.GMII_tx_d,dut.GMII_tx_dv,dut.GMII_tx_er]
         log_Ref = self.dut._log 
-        self.source = GMII_SNK(rx_bus)
-        self.sink = GMII_SRC(tx_bus,log_Ref)
+        self.source = GMII_SNK(dut,rx_bus)
+        self.sink = GMII_SRC(dut,tx_bus,log_Ref)
         
     
     async def reset(self):
@@ -57,7 +58,10 @@ class TB():
         self.logger.info(str)
 
     async def _generate_frame(self,num):
-        payload,crc = gen_frame(num)
+        ## Generating Pure frame
+        ## To load a buffer length must be appended
+        logger = self.logger_vals
+        payload,crc = gen_frame(num,logger,wo_addr=False)
         return payload,crc
 
 
@@ -73,6 +77,8 @@ async def my_test(dut):
     await my_tb.reset()
     print("Messeage -> ",my_frame)
     await my_tb.sink.send(my_frame)
+    my_frame,my_crc = await my_tb._generate_frame(17)
+    await my_tb.sink.send(my_frame)
     await Timer(60,"ns")
 
     await Timer(90,"ns")
@@ -83,5 +89,7 @@ async def my_test(dut):
 
     my_frame,my_crc = await my_tb._generate_frame(17)
     await my_tb.sink.send(my_frame)
+    await Timer(200,"ns")
+    
+    my_tb.glb_rst.value = 1
     await Timer(90,"ns")
-    print("Messeage -> ",my_frame)

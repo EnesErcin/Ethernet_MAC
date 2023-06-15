@@ -1,6 +1,6 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1686731941" />
-    <testcase name="my_test" classname="test" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/test.py" lineno="70" time="0.19620490074157715" sim_time_ns="446.001" ratio_time="2273.1389395182896" />
+    <property name="random_seed" value="1686813255" />
+    <testcase name="my_test" classname="test" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/test.py" lineno="68" time="0.37038373947143555" sim_time_ns="646.001" ratio_time="1744.1397425326777" />
   </testsuite>
 </testsuites>
