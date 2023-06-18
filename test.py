@@ -71,34 +71,6 @@ class TB():
 async def my_test(dut):
 
 
-    cocotb.start_soon(Clock(dut.eth_tx_clk, 4, units="ns").start())
-    dut.rst.value = 1
-    dut.transmit.encapsulation.crc_mod.updatecrc.value = 0
-    dut.transmit.encapsulation.crc_mod.data.value = 0
-
-    await Timer(50,"ns")
-    await RisingEdge(dut.eth_tx_clk)
-    dut.rst.value = 0
-    dut.transmit.encapsulation.crc_mod.data.value =  random.randint(0,47)
-    dut.transmit.encapsulation.crc_mod.updatecrc.value = 1
-
-    await RisingEdge(dut.eth_tx_clk)
-
-    dut.rst.value = 0
-    dut.transmit.encapsulation.crc_mod.data.value =  random.randint(0,100)
-    dut.transmit.encapsulation.crc_mod.updatecrc.value = 1
-
-    await RisingEdge(dut.eth_tx_clk)
-
-    dut.rst.value = 0
-    dut.transmit.encapsulation.crc_mod.data.value = random.randint(0,21)
-    dut.transmit.encapsulation.crc_mod.updatecrc.value = 1
-    await Timer(100,"ns")
-
-    dut.rst.value = 1
-    await Timer(50,"ns")
-
-    """
     my_tb = TB(dut)
     # Create logger, set level, and add stream handler
     
@@ -118,4 +90,3 @@ async def my_test(dut):
 
     my_tb.glb_rst.value = 1
     await Timer(90,"ns")
-    """

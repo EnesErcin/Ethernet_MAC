@@ -36,25 +36,6 @@ wire [crc_len-1:0] mytest;
 
 
 
-logic [7:0] register_one;
-
-logic [7:0] register_two;
-
-logic [7:0] register_three;
-
-wire [7:0] my_wire = reflect_byte(data_2);
-wire [7:0] my_assing;
-assign my_assing = reflect_byte(data_2);
-
-always_ff @(posedge clk) begin 
-  register_one <= reflect_byte(data_2);
-  register_two <= my_assing;
-  register_three <= my_wire;
-end
-
-
-
-
 //////////////////////////
 /////// FUNCTIONS ///////
 /////////////////////////

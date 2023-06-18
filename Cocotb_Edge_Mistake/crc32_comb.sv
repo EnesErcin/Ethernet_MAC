@@ -33,11 +33,11 @@ logic [datalen-1:0] data_buf;
 wire [crc_len-1:0] mytest;
 
 
-logic [7:0] register_one;
+logic [7:0] register_one = 0;
 
-logic [7:0] register_two;
+logic [7:0] register_two = 0;
 
-logic [7:0] register_three;
+logic [7:0] register_three = 0;
 
 wire [7:0] my_wire = reflect_byte(data);
 wire [7:0] my_assing;
@@ -52,15 +52,21 @@ always_comb begin
     nresult = 0;
     data_buf = 0;
     bit_n = 0;
+    register_one = 0;
+   register_two <= 0;
+   register_three <= 0;
+ 
   end
 end
 
 wire [7:0] data_2 = data;
 
 always_ff @(posedge clk) begin 
+  if(updatecrc) begin
   register_one <= reflect_byte(data_2);
   register_two <= my_assing;
   register_three <= my_wire;
+  end
 end
 
 
