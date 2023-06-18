@@ -38,7 +38,7 @@ logic GMII_tx_er;
 transmit transmit (
     // System Signal
     .eth_tx_en(eth_tx_en),         
-    .eth_tx_clk(eth_rx_clk),        
+    .eth_tx_clk(eth_tx_clk),        
     .eth_rst(rst),
     .data_in(data_in),
     .sys_clk(sys_clk),

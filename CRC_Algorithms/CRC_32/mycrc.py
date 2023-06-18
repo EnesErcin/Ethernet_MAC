@@ -1,13 +1,21 @@
 from crc import Calculator, Crc32
 
-mycalc = Calculator(Crc32.CRC32)
 
-message = ["1","2","3","4","5","6","7","8","9"]
-for i in range(0,len(message)):
-    message[i] = ord(message[i])
-message = bytes(message)
-crc_res = mycalc.checksum(message)
-print("Crc message is \t {} \t Checksum is \t {} ",message ,hex(crc_res))
+mycalc = Calculator(Crc32.CRC32)
+myhex_values = [0x42, 0x65, 0x6e, 0x69, 0x6d, 0x41, 0x64, 0xc4, 0xb1, 0x6d, 0x45, 0x6e, 0x65, 0x73, 0x76, 0x65, 0x42, 0x75, 0x45, 0x74, 0x68, 0x65, 0x72, 0x6e, 0x65, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x69, 0x50, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x75, 0x47, 0xc3, 0xb6, 0x6e, 0x64, 0x65, 0x72, 0x69, 0x6c, 0x69, 0x79, 0x6f, 0x72]
+f_mess = bytearray()
+for my_val in myhex_values:
+    f_mess = f_mess+ my_val.to_bytes(1,"big")
+
+src_addr = bytearray(b'\x07\x22\x27\xac\xdb\x65')
+dest_mac_act = bytearray(b'\x02\x35\x28\xfb\xdd\x66')
+length = bytearray(b'\x00\xc7')
+payload =   dest_mac_act+ src_addr +  length +f_mess
+
+crc_res_act = str(hex(mycalc.checksum(payload)))[2:]
+print(crc_res_act,payload.hex())
+print("\nPayload \t",f_mess)
+print("\n",crc_res_act)
 
 import cocotb 
 from cocotb.clock import Clock
@@ -25,25 +33,28 @@ async def reset(rst,strt):
 async def gen_messeage(rndm_mes):
     mycalc = Calculator(Crc32.CRC32)
     
-    if(not(rndm_mes)):
-        message = ["1","2","3","4","5","6","7","8","9"]
-    else:
-        message = []
-        for i in range(0,9):
-             message.append(random.choice(string.ascii_letters))
+    message = []
+    
+    #if(False):
+    #    message = ["1","2","3","4","5","6","7","8","9"]
+    #else:
+    #    message = []
+    #    for i in range(0,len(message_2)):
+    #         message.append(message_2[i])
 
     package = []
     for i in range(0,len(message)):
-        message[i] = ord(message[i])
+        print(message[i],type(message))
+        message[i] = (message[i])
         package.append(int(message[i]))
     message = bytes(message)
     crc_res = str(hex(mycalc.checksum(message)))[2:]
-    return package,crc_res
+    return payload,crc_res_act,len(payload)
 
 async def feed_messeage(data,updtcrc,clk,result_ver,dut,rndm,num_test,log):
-    package,crc_res = await gen_messeage(rndm)
+    package,crc_res,pack_len = await gen_messeage(rndm)
     
-    for i in range (0,9):
+    for i in range (0,pack_len):
         data.value = package[i]
         await Timer(2, units="ns")
         updtcrc.value = 1

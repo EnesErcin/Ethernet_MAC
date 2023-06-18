@@ -132,7 +132,6 @@ class GMII_SRC(Reset):
         ifg_waited = True
         
         while True:
-            await clk_edge
             
             ##################
             #### Process #####
@@ -221,6 +220,8 @@ class GMII_SRC(Reset):
                 else:
                     pass
                     ### State 3 ##
+            
+            await clk_edge
 
 
 

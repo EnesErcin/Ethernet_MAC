@@ -1,14 +1,12 @@
 module crc32_comb 
- import global::*;
 (
   input                                clk,
   input                                rst,
   input                                strt,
   input                                crc_lsb,
   input                                updatecrc,
-
-  input        [global::datalen-1:0]   data,
-  output  wire [global::crc_len-1:0]   result
+  input        [7:0]   data,
+  output  wire [31:0]   result
 );
 /*
 `ifdef COCOTB_SIM
@@ -18,23 +16,14 @@ initial begin
 end    
 `endif
 */
+wire [7:0] data_2 = data;
 
-
-localparam crc_len = global::crc_len,
-           datalen = global::datalen;
 
 logic [11:0] payload_len = 1515;
 int makefile_param ;
 
-// Determine a payload length for testing purposes
-`ifdef testing
-initial begin
-  payload_len = global::payload_len;
-  $display("Payload len %d",`payload);
-  makefile_param = `payload;
-  $display("***** Make file param into reg %d \n", makefile_param);
-end
-`endif 
+parameter crc_len = 32;
+parameter datalen = 8;
 
 logic [crc_len-1:0] crc_acc     = {(crc_len){1'b1}}; 
 logic [11:0]        byte_count  = 0;
@@ -42,39 +31,28 @@ logic [crc_len-1:0] crc_acc_n   = {(crc_len){1'b1}};
 logic [crc_len-1:0] nresult     = 0;
 logic [11:0]        bit_n       = 0;
 logic [datalen-1:0] data_buf;
-logic [crc_len-1:0] crc         = global::crc_poly;
+logic [crc_len-1:0] crc         = 32'h04C11DB7;
 wire [crc_len-1:0] mytest;
 
 
-assign result = (crc_lsb)? ~reflectcrc(crc_acc_n[crc_len-1:0]) : 0;
-wire [datalen-1:0] data_r;
-assign data_r = reflect_byte(data);
 
-  always_comb begin  
-    if(rst) begin
-      crc_acc = {(crc_len){1'b1}};
-      byte_count = 0;
-      crc_acc_n  = {(crc_len){1'b1}};
-      nresult = 0;
-      data_buf = 0;
-      bit_n = 0;
-    end
-  end
+logic [7:0] register_one;
 
-  always_ff @(posedge clk) begin 
-    if (updatecrc) begin
-      crc_acc_n = {data_r, {(crc_len-datalen){1'b0}}} ^ crc_acc_n; // Pad the data and xor with first byte of the crc accumulator
+logic [7:0] register_two;
 
-      // Itterrate over every bit of data size  
-      for (bit_n = 0; bit_n <datalen ; bit_n =bit_n +1 ) begin           
-        crc_acc_n = crc_bit_updt(crc_acc_n[crc_len-1:0], crc[crc_len-1:0], crc_acc_n[crc_len-1]);
-      end
-      
-      bit_n <= 0;
-      byte_count <= byte_count + 1; // Keep track of bytes processed
-    
-    end
-  end
+logic [7:0] register_three;
+
+wire [7:0] my_wire = reflect_byte(data_2);
+wire [7:0] my_assing;
+assign my_assing = reflect_byte(data_2);
+
+always_ff @(posedge clk) begin 
+  register_one <= reflect_byte(data_2);
+  register_two <= my_assing;
+  register_three <= my_wire;
+end
+
+
 
 
 //////////////////////////

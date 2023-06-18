@@ -7,6 +7,8 @@ from COCO_Class.Reset_Class import Reset
 from COCO_Class.GMII_Class import GMII_SNK, GMII_SRC
 from log_handle import log_handle
 from messeage_gen import gen_frame
+import random
+
 
 class TB():
     def __init__(self, dut):
@@ -67,31 +69,53 @@ class TB():
 
 @cocotb.test()
 async def my_test(dut):
+
+
+    cocotb.start_soon(Clock(dut.eth_tx_clk, 4, units="ns").start())
+    dut.rst.value = 1
+    dut.transmit.encapsulation.crc_mod.updatecrc.value = 0
+    dut.transmit.encapsulation.crc_mod.data.value = 0
+
+    await Timer(50,"ns")
+    await RisingEdge(dut.eth_tx_clk)
+    dut.rst.value = 0
+    dut.transmit.encapsulation.crc_mod.data.value =  random.randint(0,47)
+    dut.transmit.encapsulation.crc_mod.updatecrc.value = 1
+
+    await RisingEdge(dut.eth_tx_clk)
+
+    dut.rst.value = 0
+    dut.transmit.encapsulation.crc_mod.data.value =  random.randint(0,100)
+    dut.transmit.encapsulation.crc_mod.updatecrc.value = 1
+
+    await RisingEdge(dut.eth_tx_clk)
+
+    dut.rst.value = 0
+    dut.transmit.encapsulation.crc_mod.data.value = random.randint(0,21)
+    dut.transmit.encapsulation.crc_mod.updatecrc.value = 1
+    await Timer(100,"ns")
+
+    dut.rst.value = 1
+    await Timer(50,"ns")
+
+    """
     my_tb = TB(dut)
     # Create logger, set level, and add stream handler
     
-    await my_tb._log("Instentiate the log") # <<<-- Using the log
-
-    my_frame,my_crc = await my_tb._generate_frame(60)
-
-    my_tb.logger_vals.info("CRC value supposed to be: {}".format(my_crc))
-
+    my_tb.logger_vals.info("Instentiate the log") # <<<-- Using the log
     await my_tb.reset()
-    print("Messeage -> ",my_frame)
-    await my_tb.sink.send(my_frame)
-    my_frame,my_crc = await my_tb._generate_frame(17)
+    
+    my_frame,my_crc = await my_tb._generate_frame(56)
+    my_tb.logger_vals.info("CRC value supposed to be: {}".format(my_crc))
     await my_tb.sink.send(my_frame)
     await Timer(800,"ns")
 
-    await Timer(90,"ns")
+
     my_tb.glb_rst.value = 1
     await Timer(90,"ns")
     my_tb.glb_rst.value = 0
-    await Timer(90,"ns")
+    await Timer(900,"ns")
 
-    my_frame,my_crc = await my_tb._generate_frame(17)
-    await my_tb.sink.send(my_frame)
-    await Timer(200,"ns")
-    
     my_tb.glb_rst.value = 1
     await Timer(90,"ns")
+    """

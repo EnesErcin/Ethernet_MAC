@@ -1,0 +1,6 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1687084805" />
+    <testcase name="my_test" classname="mycrc" file="/home/enes/Desktop/Ethernet/Mac_Implementation/Ethernet_MAC/Cocotb_Edge_Mistake/mycrc.py" lineno="47" time="0.007080078125" sim_time_ns="210.001" ratio_time="29660.830896551724" />
+  </testsuite>
+</testsuites>

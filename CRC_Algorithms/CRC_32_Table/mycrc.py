@@ -5,6 +5,7 @@ from cocotb.triggers import FallingEdge ,RisingEdge, Timer
 import string 
 import random
 
+
 async def reset(rst,strt):
     rst.value   =   1
     strt.value  =   1
@@ -16,8 +17,8 @@ async def mem_file_test(dut,lookup):
     dut._log.info("Lookup [0]   {}".format(hex(lookup[0].value.integer)))
     dut._log.info("Lookuo [1]   {}".format(hex(lookup[1].value.integer))) 
     assert str(hex(lookup[1].value.integer))    == "0x4c11db7"     #  Correct Table Generated
-    
-async def gen_messeage(rndm_mes,dut):
+
+async def gen_messeage(rndm_mes):
     mycalc = Calculator(Crc32.CRC32)
     
     if(not(rndm_mes)):

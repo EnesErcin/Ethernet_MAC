@@ -209,6 +209,7 @@ always_ff @(posedge eth_tx_clk) begin
               else
                   state_reg = FCS;
                   crc_lsb    = 1;
+                  updatecrc  = 0;
           end  
         end
     
@@ -217,8 +218,9 @@ always_ff @(posedge eth_tx_clk) begin
               byte_count = byte_count + 1;
           end else begin
               state_reg = FCS;
+              updatecrc  = 0;
               byte_count = 0;
-              updatecrc   =   0;
+              updatecrc   = 1;
               crc_lsb     = 1;
           end
         end

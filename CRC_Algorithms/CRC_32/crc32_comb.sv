@@ -6,24 +6,24 @@ import global::*; // Global Ethernet Module Parameters
   input                           strt,
   input                           crc_lsb,
   input                           updatecrc,
-
+  input   [15:0]                  length,
   input   [global::datalen-1:0]   data,
   output  [global::crc_len-1:0]   result
 );
 
-/*
+
 `ifdef COCOTB_SIM
 initial begin
     $dumpfile("sim.vcd");
     $dumpvars(0,crc32_comb);
 end    
 `endif
-*/
+
 
 localparam crc_len = global::crc_len,
            datalen = global::datalen;
 
-logic [11:0] payload_len = 1515;
+logic [15:0] payload_len = length;
 int makefile_param ;
 
 // Determine a payload length for testing purposes
