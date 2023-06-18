@@ -34,6 +34,51 @@ logic [datalen-1:0] data_buf;
 logic [crc_len-1:0] crc         = 32'h04C11DB7;
 wire [crc_len-1:0] mytest;
 
+logic [crc_len-1:0] mytest_2;
+logic [crc_len-1:0] my_test_3_crc_acc_n = {(crc_len){1'b1}};
+logic  [11:0]bit_n_t = 0;
+
+always_comb begin
+if (updatecrc) begin
+my_test_3_crc_acc_n = {reflect_byte(data[datalen-1:0]), {(crc_len-datalen){1'b0}}} ^ my_test_3_crc_acc_n;
+
+      for (bit_n_t = 0; bit_n_t <datalen ; bit_n_t =bit_n_t +1 ) begin           
+         my_test_3_crc_acc_n = crc_bit_updt(my_test_3_crc_acc_n[crc_len-1:0], crc[crc_len-1:0], my_test_3_crc_acc_n[crc_len-1]);
+      end
+
+ mytest_2 = ~reflectcrc(my_test_3_crc_acc_n[crc_len-1:0]);
+end
+end
+
+assign mytest = ~reflectcrc(crc_acc_n[crc_len-1:0]);
+assign result = nresult;
+  always_comb begin  
+    if(rst) begin
+      crc_acc = {(crc_len){1'b1}};
+      byte_count = 0;
+      crc_acc_n  = {(crc_len){1'b1}};
+      nresult = 0;
+      data_buf = 0;
+      bit_n = 0;
+    end
+  end
+  always_ff @(posedge clk) begin 
+    if (updatecrc) begin
+      data_buf = reflect_byte(data[datalen-1:0]); // Ref_in --> CRC parementer reflect incoming data byte
+      crc_acc_n = {data_buf, {(crc_len-datalen){1'b0}}} ^ crc_acc_n; // Pad the data and xor with first byte of the crc accumulator
+      // Itterrate over every bit of data size  
+      for (bit_n = 0; bit_n <datalen ; bit_n =bit_n +1 ) begin           
+        crc_acc_n = crc_bit_updt(crc_acc_n[crc_len-1:0], crc[crc_len-1:0], crc_acc_n[crc_len-1]);
+      end
+      
+      bit_n <= 0;
+      byte_count <= byte_count + 1; // Keep track of bytes processed
+    
+    end
+        if(byte_count == payload_len-1) begin
+          nresult = ~reflectcrc(crc_acc_n[crc_len-1:0]); //Ref_out --> CRC parameter reflect output crc result at the end
+        end
+  end
 
 
 //////////////////////////
